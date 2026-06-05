@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GruaSV – Dashboard Cliente</title>
+  <style>
+/* ── Variables ─────────────────────────────────────── */
+:root {
+  --y:    #F2C94C;
+  --y2:   #D4A820;
+  --blk:  #1A1A1A;
+  --navy: #2D3142;
+  --gray: #9C9DB2;
+  --bg:   #F5F5F7;
+  --wht:  #FFFFFF;
+  --grn:  #2E7D32;
+  --red:  #C62828;
+  --brd:  #E0E0E8;
+  --r:    14px;
+  --rsm:  8px;
+  --sh:   0 4px 20px rgba(0,0,0,.09);
+}
+
+/* ── Reset ─────────────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+  background:#111;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px 0 40px;
+}
+
+/* ── Phone shell ───────────────────────────────────── */
+.phone{
+  width:390px;
+  height:844px;
+  background:var(--bg);
+  border-radius:48px;
+  border:10px solid #222;
+  box-shadow:0 30px 80px rgba(0,0,0,.85),inset 0 0 0 1px #333;
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+}
+
+/* ── Status bar ────────────────────────────────────── */
+.sb{
+  height:44px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;font-size:12px;font-weight:600;
+  transition:background .3s,color .3s;
+}
+.sb.dark{background:var(--blk);color:#fff}
+.sb.light{background:var(--wht);color:var(--navy)}
+.sb.transp{background:transparent;color:var(--navy)}
+
+/* ── Screens ───────────────────────────────────────── */
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;position:relative}
+.screen.active{display:flex}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── Animations ────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ping{0%{transform:scale(.8);opacity:.8}100%{transform:scale(2.8);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.anim{animation:fadeUp .35s ease forwards}
+
+/* ── AppBar ────────────────────────────────────────── */
+.appbar{
+  height:56px;display:flex;align-items:center;
+  padding:0 8px 0 4px;flex-shrink:0;gap:4px;
+  background:var(--wht);border-bottom:1px solid var(--brd);
+}
+.appbar.transp{background:transparent;border-bottom:none}
+.appbar-title{flex:1;text-align:center;font-size:17px;font-weight:700;color:var(--navy)}
+.back-btn{
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;cursor:pointer;font-size:20px;
+  border-radius:50%;color:var(--navy);transition:background .15s;
+}
+.back-btn:hover{background:var(--bg)}
+.spacer{width:44px;flex-shrink:0}
+.icon-btn{
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;cursor:pointer;font-size:22px;
+  border-radius:50%;transition:background .15s;position:relative;
+}
+.icon-btn:hover{background:rgba(0,0,0,.06)}
+.notif-badge{
+  position:absolute;top:8px;right:8px;
+  width:8px;height:8px;background:var(--red);
+  border-radius:50%;border:1.5px solid var(--wht);
+}
+
+/* ── Tab bar ───────────────────────────────────────── */
+.tab-bar{
+  height:60px;background:var(--wht);
+  border-top:1px solid var(--brd);
+  display:flex;flex-shrink:0;
+  transition:transform .3s;
+}
+.tab-bar.hidden{transform:translateY(100%);pointer-events:none;height:0;overflow:hidden}
+.tab-btn{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  background:none;border:none;cursor:pointer;
+  font-size:10px;font-weight:600;color:var(--gray);
+  transition:color .2s;font-family:inherit;
+}
+.tab-btn.active{color:var(--y2)}
+.tab-icon{font-size:22px;line-height:1}
+
+/* ── Buttons ───────────────────────────────────────── */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:15px 20px;border:none;border-radius:var(--r);
+  font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:all .22s;
+}
+.btn-primary{background:var(--y);color:var(--blk)}
+.btn-primary:hover{background:var(--y2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(242,201,76,.4)}
+.btn-primary:active{transform:translateY(0)}
+.btn-outline{background:transparent;color:var(--navy);border:1.5px solid var(--brd)}
+.btn-outline:hover{border-color:var(--navy)}
+.btn-ghost{background:transparent;color:var(--gray);font-size:14px;font-weight:500}
+.btn-danger{background:transparent;color:var(--red);font-size:15px;font-weight:600}
+.btn:disabled{opacity:.45;pointer-events:none}
+.btn-sm{padding:10px 16px;font-size:14px}
+.btn-xs{padding:7px 14px;font-size:13px;font-weight:600;border-radius:var(--rsm)}
+
+/* ── Inputs ────────────────────────────────────────── */
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.fg label{font-size:14px;font-weight:600;color:var(--navy)}
+.inp{
+  padding:13px 16px;background:var(--bg);
+  border:1.5px solid transparent;border-radius:var(--r);
+  font-size:15px;color:var(--navy);font-family:inherit;
+  outline:none;width:100%;transition:border-color .2s,background .2s;
+}
+.inp:focus{border-color:var(--y);background:var(--wht)}
+.inp::placeholder{color:#bbb}
+
+/* ── Cards ─────────────────────────────────────────── */
+.card{background:var(--wht);border-radius:var(--r);border:1px solid var(--brd);overflow:hidden}
+.card-hover{cursor:pointer;transition:box-shadow .2s,transform .2s}
+.card-hover:active{transform:scale(.985)}
+
+/* ── Chips ─────────────────────────────────────────── */
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:100px;
+  font-size:12px;font-weight:700;letter-spacing:.2px;
+}
+.chip-green{background:#E8F5E9;color:var(--grn)}
+.chip-red{background:#FFEBEE;color:var(--red)}
+.chip-yellow{background:#FFFDE7;color:#F57F17}
+.chip-gray{background:var(--bg);color:var(--gray)}
+
+/* ── Divider ───────────────────────────────────────── */
+.hr{border:none;border-top:1px solid var(--brd);margin:0}
+
+/* ── Stars ─────────────────────────────────────────── */
+.stars{display:flex;gap:2px}
+.star{font-size:14px;line-height:1}
+
+/* ── Helpers ───────────────────────────────────────── */
+.p16{padding:16px}.p20{padding:20px}.p24{padding:24px}
+.px16{padding-left:16px;padding-right:16px}
+.px20{padding-left:20px;padding-right:20px}
+.px24{padding-left:24px;padding-right:24px}
+.pt12{padding-top:12px}.pt16{padding-top:16px}
+.pb16{padding-bottom:16px}.pb24{padding-bottom:24px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt20{margin-top:20px}.mt24{margin-top:24px}
+.mb4{margin-bottom:4px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}
+.tc{text-align:center}.tr{text-align:right}
+.flex{display:flex}.aic{align-items:center}.jb{justify-content:space-between}
+.g4{gap:4px}.g6{gap:6px}.g8{gap:8px}.g12{gap:12px}.g16{gap:16px}
+.f1{flex:1}.fs0{flex-shrink:0}
+.bold{font-weight:700}.f900{font-weight:900}
+.f11{font-size:11px}.f12{font-size:12px}.f13{font-size:13px}.f14{font-size:14px}.f15{font-size:15px}.f16{font-size:16px}
+.cgray{color:var(--gray)}.cnavy{color:var(--navy)}.cgrn{color:var(--grn)}.cred{color:var(--red)}.cyellow{color:var(--y2)}
+.cwht{color:#fff}
+
+/* ═══════════════════════════════════════════════
+   HOME SCREEN
+═══════════════════════════════════════════════ */
+#s-home{background:var(--bg)}
+
+/* Home AppBar */
+.home-appbar{
+  height:64px;padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--wht);border-bottom:1px solid var(--brd);
+  flex-shrink:0;
+}
+.greeting-line{font-size:13px;color:var(--gray);font-weight:500}
+.greeting-name{font-size:18px;font-weight:800;color:var(--navy)}
+.avatar-sm{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--y);display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:var(--blk);flex-shrink:0;
+}
+
+/* Map placeholder */
+.map-area{
+  height:260px;flex-shrink:0;
+  position:relative;overflow:hidden;
+  background:
+    linear-gradient(rgba(203,213,220,.8) 1.5px,transparent 1.5px),
+    linear-gradient(90deg,rgba(203,213,220,.8) 1.5px,transparent 1.5px),
+    linear-gradient(rgba(232,237,240,.4) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(232,237,240,.4) 1px,transparent 1px),
+    #EEF2F4;
+  background-size:72px 72px,72px 72px,18px 18px,18px 18px;
+}
+.map-top-fade{
+  position:absolute;top:0;left:0;right:0;height:60px;
+  background:linear-gradient(to bottom,rgba(255,255,255,.5),transparent);
+  pointer-events:none;
+}
+.map-bottom-fade{
+  position:absolute;bottom:0;left:0;right:0;height:80px;
+  background:linear-gradient(to top,var(--bg),transparent);
+  pointer-events:none;
+}
+.map-label{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  background:var(--wht);padding:6px 14px;border-radius:100px;
+  font-size:12px;font-weight:600;color:var(--navy);
+  box-shadow:var(--sh);white-space:nowrap;
+}
+
+/* Location pin */
+.pin-wrap{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-60%);
+  display:flex;flex-direction:column;align-items:center;
+}
+.pin-rings{position:relative;width:50px;height:50px;display:flex;align-items:center;justify-content:center}
+.pin-ring{
+  position:absolute;width:50px;height:50px;border-radius:50%;
+  background:rgba(242,201,76,.25);
+  animation:ping 2.4s ease-out infinite;
+}
+.pin-ring:nth-child(2){animation-delay:.8s}
+.pin-dot{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--y);border:3px solid var(--wht);
+  box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:1;
+}
+.pin-shadow{
+  width:8px;height:4px;background:rgba(0,0,0,.15);
+  border-radius:50%;margin-top:4px;
+}
+
+/* Home bottom panel */
+.home-panel{
+  flex:1;background:var(--wht);
+  border-radius:24px 24px 0 0;
+  margin-top:-20px;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.home-panel-scroll{flex:1;overflow-y:auto}
+.home-panel-scroll::-webkit-scrollbar{display:none}
+
+/* Request CTA */
+.cta-btn{
+  margin:20px 20px 0;
+  background:var(--blk);color:var(--wht);
+  padding:18px 20px;border:none;border-radius:var(--r);
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;transition:all .25s;width:calc(100% - 40px);
+  font-family:inherit;
+}
+.cta-btn:hover{background:#2a2a2a;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.cta-btn:active{transform:translateY(0)}
+.cta-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:var(--y);display:flex;align-items:center;justify-content:center;
+  font-size:28px;flex-shrink:0;
+}
+.cta-title{font-size:17px;font-weight:800;color:#fff}
+.cta-sub{font-size:12px;color:#888;margin-top:2px}
+
+/* Quick service chips */
+.quick-services{
+  display:flex;gap:10px;
+  padding:16px 20px 0;overflow-x:auto;
+  scrollbar-width:none;
+}
+.quick-services::-webkit-scrollbar{display:none}
+.qsvc{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:12px 16px;background:var(--bg);
+  border:1.5px solid var(--brd);border-radius:var(--r);
+  cursor:pointer;transition:all .2s;flex-shrink:0;min-width:90px;
+}
+.qsvc:hover,.qsvc:active{border-color:var(--y);background:#FFFBEC}
+.qsvc-icon{font-size:28px}
+.qsvc-name{font-size:11px;font-weight:700;color:var(--navy);text-align:center}
+.qsvc-price{font-size:10px;color:var(--gray)}
+
+/* Section header */
+.section-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 20px 10px;
+}
+.section-title{font-size:16px;font-weight:800;color:var(--navy)}
+.section-link{font-size:13px;font-weight:600;color:var(--y2);cursor:pointer}
+
+/* Mini history card on home */
+.mini-service-card{
+  margin:0 20px;background:var(--bg);
+  border-radius:var(--r);border:1px solid var(--brd);
+  padding:14px 16px;cursor:pointer;
+  display:flex;align-items:center;gap:14px;
+  transition:box-shadow .2s;
+}
+.mini-service-card:hover{box-shadow:var(--sh)}
+.mini-svc-icon{
+  width:44px;height:44px;border-radius:var(--rsm);
+  background:var(--y);display:flex;align-items:center;justify-content:center;
+  font-size:24px;flex-shrink:0;
+}
+.mini-svc-route{font-size:12px;color:var(--gray);margin-top:2px;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:180px}
+
+/* Stats row on home */
+.home-stats{
+  display:flex;gap:10px;padding:0 20px;
+}
+.home-stat{
+  flex:1;background:var(--bg);border-radius:var(--r);
+  border:1px solid var(--brd);padding:14px;text-align:center;
+}
+.home-stat-val{font-size:22px;font-weight:900;color:var(--navy)}
+.home-stat-lbl{font-size:11px;color:var(--gray);margin-top:2px}
+
+/* ═══════════════════════════════════════════════
+   HISTORY SCREEN
+═══════════════════════════════════════════════ */
+#s-history{background:var(--wht)}
+
+/* Filter chips row */
+.filter-row{
+  display:flex;gap:8px;padding:12px 20px;
+  overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--brd);
+  flex-shrink:0;
+}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-chip{
+  padding:7px 16px;border-radius:100px;
+  border:1.5px solid var(--brd);background:var(--wht);
+  font-size:13px;font-weight:600;color:var(--gray);
+  cursor:pointer;white-space:nowrap;transition:all .2s;
+  font-family:inherit;
+}
+.filter-chip.active{background:var(--blk);color:var(--y);border-color:var(--blk)}
+
+/* History list items */
+.history-list{flex:1;overflow-y:auto}
+.history-list::-webkit-scrollbar{display:none}
+
+.hist-group-label{
+  padding:14px 20px 6px;
+  font-size:12px;font-weight:700;color:var(--gray);
+  text-transform:uppercase;letter-spacing:.8px;
+  background:var(--bg);border-bottom:1px solid var(--brd);
+}
+
+.hist-item{
+  padding:16px 20px;border-bottom:1px solid var(--brd);
+  cursor:pointer;transition:background .15s;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.hist-item:hover{background:var(--bg)}
+.hist-item:active{background:#f0f0f2}
+
+.hist-type-icon{
+  width:46px;height:46px;border-radius:var(--rsm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;flex-shrink:0;
+}
+.hist-type-icon.transfer{background:#E3F2FD}
+.hist-type-icon.emergency{background:#FFEBEE}
+.hist-type-icon.breakdown{background:#FFF8E1}
+
+.hist-body{flex:1;min-width:0}
+.hist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.hist-type-name{font-size:15px;font-weight:700;color:var(--navy)}
+.hist-amount{font-size:15px;font-weight:800;color:var(--navy)}
+
+.hist-route{font-size:13px;color:var(--gray);margin-bottom:6px;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.hist-route .dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin:0 6px;vertical-align:middle;
+}
+.hist-footer{display:flex;align-items:center;justify-content:space-between}
+.hist-date{font-size:12px;color:var(--gray)}
+
+/* Empty state */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 32px;text-align:center;gap:12px;
+}
+.empty-icon{font-size:64px;opacity:.4}
+.empty-title{font-size:18px;font-weight:700;color:var(--navy)}
+.empty-sub{font-size:14px;color:var(--gray);line-height:1.6}
+
+/* ═══════════════════════════════════════════════
+   DETAIL SCREEN
+═══════════════════════════════════════════════ */
+#s-detail{background:var(--wht)}
+
+/* Mini map in detail */
+.detail-map{
+  height:180px;flex-shrink:0;position:relative;overflow:hidden;
+  background:
+    linear-gradient(rgba(203,213,220,.7) 1.5px,transparent 1.5px),
+    linear-gradient(90deg,rgba(203,213,220,.7) 1.5px,transparent 1.5px),
+    #EEF2F4;
+  background-size:56px 56px;
+}
+.detail-map-fade{
+  position:absolute;bottom:0;left:0;right:0;height:60px;
+  background:linear-gradient(to top,var(--wht),transparent);
+  pointer-events:none;
+}
+.detail-status-badge{
+  position:absolute;top:12px;right:12px;
+}
+.route-line-svg{position:absolute;inset:0;width:100%;height:100%;opacity:.6}
+
+/* Route display */
+.route-block{padding:16px 20px}
+.route-row{display:flex;align-items:flex-start;gap:14px;padding:6px 0}
+.route-row + .route-row{padding-top:0}
+.route-dot-col{display:flex;flex-direction:column;align-items:center;padding-top:2px}
+.route-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.route-dot.origin{background:var(--grn)}
+.route-dot.dest{background:var(--red)}
+.route-line{width:2px;height:24px;background:var(--brd);margin:3px 5px}
+.route-addr{font-size:14px;font-weight:500;color:var(--navy);flex:1}
+.route-sub{font-size:12px;color:var(--gray);margin-top:1px}
+
+/* Driver info in detail */
+.detail-driver{
+  margin:0 20px;padding:14px;
+  background:var(--bg);border-radius:var(--r);
+  display:flex;align-items:center;gap:14px;
+}
+.detail-driver-avatar{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--y);display:flex;align-items:center;justify-content:center;
+  font-size:26px;flex-shrink:0;
+}
+
+/* Fare breakdown */
+.fare-line{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--brd);
+}
+.fare-line:last-child{border-bottom:none}
+.fare-line.total .fare-lbl{font-weight:800;color:var(--navy);font-size:16px}
+.fare-line.total .fare-val{font-weight:900;color:var(--grn);font-size:17px}
+
+/* Submitted rating */
+.detail-rating-row{
+  margin:0 20px;padding:14px 16px;
+  background:#FFFBEC;border-radius:var(--r);
+  border:1px solid #F2C94C55;
+  display:flex;align-items:center;gap:12px;
+}
+
+/* ═══════════════════════════════════════════════
+   PROFILE SCREEN
+═══════════════════════════════════════════════ */
+#s-profile{background:var(--bg)}
+
+.profile-hero{
+  background:var(--blk);
+  padding:24px 24px 28px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  flex-shrink:0;
+}
+.profile-avatar{
+  width:84px;height:84px;border-radius:50%;
+  background:var(--y);display:flex;align-items:center;justify-content:center;
+  font-size:42px;font-weight:700;color:var(--blk);
+  border:3px solid rgba(255,255,255,.15);
+}
+.profile-name{font-size:22px;font-weight:900;color:#fff}
+.profile-email{font-size:14px;color:#888}
+.profile-since{font-size:12px;color:#666;margin-top:-4px}
+.edit-profile-btn{
+  padding:8px 22px;background:transparent;color:#fff;
+  border:1px solid rgba(255,255,255,.25);border-radius:100px;
+  font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:border-color .2s;
+}
+.edit-profile-btn:hover{border-color:rgba(255,255,255,.6)}
+
+.profile-stats{
+  display:flex;background:var(--blk);
+  border-top:1px solid #2a2a2a;
+  flex-shrink:0;
+}
+.pstat{
+  flex:1;padding:16px 8px;text-align:center;
+  border-right:1px solid #2a2a2a;
+}
+.pstat:last-child{border-right:none}
+.pstat-val{font-size:22px;font-weight:900;color:var(--y)}
+.pstat-lbl{font-size:10px;color:#777;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+.profile-menu{background:var(--wht);margin-top:12px}
+.menu-item{
+  display:flex;align-items:center;gap:16px;
+  padding:16px 20px;border-bottom:1px solid var(--brd);
+  cursor:pointer;transition:background .15s;
+}
+.menu-item:hover{background:var(--bg)}
+.menu-item:last-child{border-bottom:none}
+.menu-icon-wrap{
+  width:40px;height:40px;border-radius:var(--rsm);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  flex-shrink:0;
+}
+.menu-lbl{flex:1;font-size:15px;font-weight:500;color:var(--navy)}
+.menu-sub{font-size:12px;color:var(--gray);margin-top:1px}
+.menu-arrow{color:var(--gray);font-size:18px}
+.menu-item.danger .menu-lbl{color:var(--red)}
+
+/* ═══════════════════════════════════════════════
+   EDIT PROFILE SCREEN
+═══════════════════════════════════════════════ */
+#s-edit{background:var(--wht)}
+
+/* ═══════════════════════════════════════════════
+   VEHICLES SCREEN
+═══════════════════════════════════════════════ */
+#s-vehicles{background:var(--wht)}
+
+.vehicle-card{
+  margin:0 20px 14px;padding:16px;
+  background:var(--bg);border:1.5px solid var(--brd);
+  border-radius:var(--r);display:flex;align-items:center;gap:14px;
+  transition:border-color .2s;
+}
+.vehicle-card.primary{border-color:var(--y);background:#FFFBEC}
+.vehicle-card-icon{
+  width:52px;height:52px;border-radius:var(--rsm);
+  background:var(--y);display:flex;align-items:center;justify-content:center;
+  font-size:28px;flex-shrink:0;
+}
+.vehicle-name{font-size:15px;font-weight:700;color:var(--navy)}
+.vehicle-plate{
+  display:inline-block;font-size:13px;font-weight:800;
+  background:var(--blk);color:var(--y);
+  padding:3px 9px;border-radius:5px;letter-spacing:1px;
+  margin-top:3px;
+}
+.primary-badge{
+  font-size:11px;font-weight:700;color:var(--y2);
+  background:#FFF8E1;border:1px solid #F2C94C55;
+  padding:3px 9px;border-radius:100px;margin-top:3px;
+  display:inline-block;
+}
+
+/* ═══════════════════════════════════════════════
+   NOTIFICATIONS SCREEN
+═══════════════════════════════════════════════ */
+#s-notif{background:var(--wht)}
+
+.notif-item{
+  padding:16px 20px;border-bottom:1px solid var(--brd);
+  display:flex;align-items:flex-start;gap:14px;cursor:pointer;
+  transition:background .15s;
+}
+.notif-item:hover{background:var(--bg)}
+.notif-item.unread{background:#FFFBEC}
+.notif-item.unread:hover{background:#FFF5D6}
+.notif-icon-wrap{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.notif-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.notif-body{font-size:13px;color:var(--gray);line-height:1.5}
+.notif-time{font-size:11px;color:var(--gray);margin-top:4px}
+.unread-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--y);flex-shrink:0;margin-top:6px;
+}
+
+/* ═══════════════════════════════════════════════
+   REQUEST BOTTOM SHEET
+═══════════════════════════════════════════════ */
+.sheet-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  z-index:50;opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.sheet-overlay.show{opacity:1;pointer-events:all}
+
+.bottom-sheet{
+  position:absolute;bottom:0;left:0;right:0;
+  background:var(--wht);border-radius:24px 24px 0 0;
+  z-index:51;transform:translateY(100%);
+  transition:transform .35s cubic-bezier(.32,.72,0,1);
+  padding:0 0 24px;
+}
+.bottom-sheet.show{transform:translateY(0)}
+
+.sheet-handle{
+  width:40px;height:4px;background:var(--brd);
+  border-radius:2px;margin:12px auto 20px;
+}
+.sheet-title{font-size:19px;font-weight:800;color:var(--navy);padding:0 20px;margin-bottom:4px}
+.sheet-sub{font-size:14px;color:var(--gray);padding:0 20px;margin-bottom:20px}
+
+.svc-card{
+  margin:0 20px 12px;padding:16px;
+  border:1.5px solid var(--brd);border-radius:var(--r);
+  display:flex;align-items:center;gap:16px;
+  cursor:pointer;transition:all .2s;background:var(--wht);
+}
+.svc-card:hover,.svc-card:active{border-color:var(--y);background:#FFFBEC}
+.svc-card-icon{font-size:36px;flex-shrink:0}
+.svc-card-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.svc-card-desc{font-size:13px;color:var(--gray);line-height:1.4}
+.svc-card-price{font-size:12px;font-weight:700;color:var(--y2);margin-top:3px}
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:-80px;left:50%;transform:translateX(-50%);
+  background:var(--navy);color:#fff;
+  padding:12px 24px;border-radius:100px;
+  font-size:14px;font-weight:500;white-space:nowrap;
+  z-index:999;transition:bottom .35s ease;
+  max-width:340px;text-align:center;
+}
+.toast.show{bottom:60px}
+.toast.success{background:var(--grn)}
+.toast.error{background:var(--red)}
+
+/* ── Demo nav ───────────────────────────────────────── */
+.demo-nav{
+  width:390px;background:#1a1a1a;border-bottom:1px solid #2a2a2a;
+  padding:8px 10px;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;
+}
+.demo-btn{
+  padding:5px 10px;background:#2a2a2a;color:var(--y);
+  border:1px solid #F2C94C30;border-radius:4px;
+  cursor:pointer;font-size:10px;transition:all .2s;white-space:nowrap;
+}
+.demo-btn:hover,.demo-btn.active{background:var(--y);color:#000}
+  </style>
+</head>
+<body>
+
+<!-- Demo navigation -->
+<div class="demo-nav">
+  <button class="demo-btn active" onclick="App.tab('home')">🏠 Inicio</button>
+  <button class="demo-btn" onclick="App.tab('history')">📋 Historial</button>
+  <button class="demo-btn" onclick="App.go('s-detail', SERVICES[0].id)">📄 Detalle</button>
+  <button class="demo-btn" onclick="App.tab('profile')">👤 Perfil</button>
+  <button class="demo-btn" onclick="App.go('s-edit')">✏️ Editar perfil</button>
+  <button class="demo-btn" onclick="App.go('s-vehicles')">🚗 Vehículos</button>
+  <button class="demo-btn" onclick="App.go('s-notif')">🔔 Notifs</button>
+  <button class="demo-btn" onclick="App.openSheet()">➕ Solicitar</button>
+</div>
+
+<!-- Phone -->
+<div class="phone">
+
+  <!-- Status bar -->
+  <div class="sb light" id="sb">
+    <span id="sb-time">9:41</span>
+    <div class="flex g6 aic"><span>📶</span><span>🔋</span></div>
+  </div>
+
+  <!-- ══════════ HOME ══════════ -->
+  <div class="screen active" id="s-home">
+
+    <div class="home-appbar">
+      <div>
+        <div class="greeting-line" id="greeting-line">Buenos días 👋</div>
+        <div class="greeting-name" id="greeting-name">Cargando…</div>
+      </div>
+      <div class="flex g8 aic">
+        <button class="icon-btn" onclick="App.go('s-notif')">
+          🔔<div class="notif-badge" id="notif-badge"></div>
+        </button>
+        <div class="avatar-sm" id="home-avatar">👤</div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="map-area">
+      <div class="map-top-fade"></div>
+      <div class="map-bottom-fade"></div>
+      <span class="map-label">📍 Tu ubicación actual</span>
+      <div class="pin-wrap">
+        <div class="pin-rings">
+          <div class="pin-ring"></div>
+          <div class="pin-ring"></div>
+          <div class="pin-dot"></div>
+        </div>
+        <div class="pin-shadow"></div>
+      </div>
+    </div>
+
+    <!-- Panel -->
+    <div class="home-panel">
+      <div class="home-panel-scroll">
+
+        <!-- CTA -->
+        <button class="cta-btn anim" onclick="App.openSheet()">
+          <div class="cta-icon">🚛</div>
+          <div class="f1">
+            <div class="cta-title">Solicitar Grúa</div>
+            <div class="cta-sub">Traslados, emergencias y más</div>
+          </div>
+          <span style="font-size:20px;color:#888">›</span>
+        </button>
+
+        <!-- Quick services -->
+        <div class="quick-services anim">
+          <div class="qsvc" onclick="App.requestService('transfer')">
+            <div class="qsvc-icon">🚛</div>
+            <div class="qsvc-name">Traslado</div>
+            <div class="qsvc-price">Desde $5</div>
+          </div>
+          <div class="qsvc" onclick="App.requestService('emergency')">
+            <div class="qsvc-icon">🆘</div>
+            <div class="qsvc-name">Emergencia</div>
+            <div class="qsvc-price">Desde $10</div>
+          </div>
+          <div class="qsvc" onclick="App.requestService('breakdown')">
+            <div class="qsvc-icon">🔧</div>
+            <div class="qsvc-name">Varado</div>
+            <div class="qsvc-price">Desde $7.50</div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="section-hdr mt12">
+          <div class="section-title">Tu actividad</div>
+        </div>
+        <div class="home-stats anim">
+          <div class="home-stat">
+            <div class="home-stat-val" id="stat-total">—</div>
+            <div class="home-stat-lbl">Servicios</div>
+          </div>
+          <div class="home-stat">
+            <div class="home-stat-val" id="stat-spent">—</div>
+            <div class="home-stat-lbl">Gastado</div>
+          </div>
+          <div class="home-stat">
+            <div class="home-stat-val" id="stat-rating">—</div>
+            <div class="home-stat-lbl">Calificación</div>
+          </div>
+        </div>
+
+        <!-- Last service -->
+        <div class="section-hdr mt16">
+          <div class="section-title">Último servicio</div>
+          <div class="section-link" onclick="App.tab('history')">Ver todo</div>
+        </div>
+        <div id="last-service-wrap" class="pb24"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ HISTORY ══════════ -->
+  <div class="screen" id="s-history">
+    <div class="appbar">
+      <div class="spacer"></div>
+      <div class="appbar-title">Mis Servicios</div>
+      <div class="spacer"></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-row">
+      <button class="filter-chip active" data-filter="all"   onclick="App.filterHistory('all',this)">Todos</button>
+      <button class="filter-chip"        data-filter="completed" onclick="App.filterHistory('completed',this)">Completados</button>
+      <button class="filter-chip"        data-filter="cancelled" onclick="App.filterHistory('cancelled',this)">Cancelados</button>
+    </div>
+
+    <div class="history-list" id="history-list">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- ══════════ DETAIL ══════════ -->
+  <div class="screen" id="s-detail">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Detalle del servicio</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="scroll" id="detail-body">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- ══════════ PROFILE ══════════ -->
+  <div class="screen" id="s-profile">
+    <div class="scroll">
+      <!-- Hero -->
+      <div class="profile-hero">
+        <div class="profile-avatar" id="prof-avatar">👤</div>
+        <div class="profile-name"  id="prof-name">—</div>
+        <div class="profile-email" id="prof-email">—</div>
+        <div class="profile-since" id="prof-since"></div>
+        <button class="edit-profile-btn" onclick="App.go('s-edit')">✏️ Editar perfil</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="profile-stats">
+        <div class="pstat">
+          <div class="pstat-val" id="ps-total">—</div>
+          <div class="pstat-lbl">Servicios</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" id="ps-spent">—</div>
+          <div class="pstat-lbl">Gastado</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" id="ps-rating">⭐ —</div>
+          <div class="pstat-lbl">Calificación</div>
+        </div>
+      </div>
+
+      <!-- Menu -->
+      <div class="profile-menu mt12">
+        <div class="menu-item" onclick="App.go('s-vehicles')">
+          <div class="menu-icon-wrap" style="background:#E3F2FD">🚗</div>
+          <div class="f1">
+            <div class="menu-lbl">Mi vehículo</div>
+            <div class="menu-sub" id="menu-vehicle-sub">Sin vehículo registrado</div>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="App.tab('history')">
+          <div class="menu-icon-wrap" style="background:#F3E5F5">📋</div>
+          <div class="f1">
+            <div class="menu-lbl">Historial de servicios</div>
+            <div class="menu-sub" id="menu-hist-sub">0 servicios</div>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="App.go('s-notif')">
+          <div class="menu-icon-wrap" style="background:#FFF8E1">🔔</div>
+          <div class="f1">
+            <div class="menu-lbl">Notificaciones</div>
+            <div class="menu-sub">3 sin leer</div>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="App.support()">
+          <div class="menu-icon-wrap" style="background:#E8F5E9">💬</div>
+          <div class="f1">
+            <div class="menu-lbl">Soporte y ayuda</div>
+            <div class="menu-sub">Chat, FAQ, Reportar problema</div>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="App.support('terms')">
+          <div class="menu-icon-wrap" style="background:#ECEFF1">📜</div>
+          <div class="f1">
+            <div class="menu-lbl">Términos y privacidad</div>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+      </div>
+
+      <div class="profile-menu mt12 mb16">
+        <div class="menu-item danger" onclick="App.logout()">
+          <div class="menu-icon-wrap" style="background:#FFEBEE">🚪</div>
+          <div class="f1"><div class="menu-lbl">Cerrar sesión</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════ EDIT PROFILE ══════════ -->
+  <div class="screen" id="s-edit">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Editar perfil</div>
+      <button class="back-btn" onclick="App.saveProfile()" style="color:var(--y2);font-size:14px;font-weight:700;width:auto;padding:0 12px;border-radius:var(--rsm)">Guardar</button>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+
+        <!-- Avatar picker -->
+        <div class="tc mb24">
+          <div style="width:88px;height:88px;border-radius:50%;background:var(--y);display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 12px;cursor:pointer;border:3px solid var(--brd)" onclick="App.changeAvatar()" id="edit-avatar-preview">👤</div>
+          <span class="f13 cyellow bold" style="cursor:pointer" onclick="App.changeAvatar()">Cambiar foto</span>
+        </div>
+
+        <div class="fg">
+          <label>Nombre completo</label>
+          <input class="inp" type="text" id="edit-name" placeholder="Tu nombre completo" autocomplete="name">
+        </div>
+        <div class="fg">
+          <label>Correo electrónico</label>
+          <input class="inp" type="email" id="edit-email" placeholder="correo@ejemplo.com" autocomplete="email">
+        </div>
+        <div class="fg">
+          <label>Teléfono</label>
+          <input class="inp" type="tel" id="edit-phone" placeholder="7xxx-xxxx" autocomplete="tel">
+        </div>
+        <div class="fg">
+          <label>Departamento</label>
+          <select class="inp" id="edit-dept" style="appearance:none;cursor:pointer">
+            <option value="">Selecciona…</option>
+            <option>San Salvador</option><option>Santa Ana</option><option>San Miguel</option>
+            <option>La Libertad</option><option>Sonsonate</option><option>Chalatenango</option>
+            <option>Cuscatlán</option><option>La Paz</option><option>Cabañas</option>
+            <option>San Vicente</option><option>Usulután</option><option>Morazán</option>
+            <option>La Unión</option><option>Ahuachapán</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary mt8" onclick="App.saveProfile()">Guardar cambios</button>
+        <button class="btn btn-ghost mt8" onclick="App.back()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ VEHICLES ══════════ -->
+  <div class="screen" id="s-vehicles">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Mis Vehículos</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="scroll">
+      <div id="vehicles-list" class="pt16 pb24">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="px20 pb24">
+        <button class="btn btn-outline" onclick="App.toast('Funcionalidad próximamente 🛠️')">
+          ＋ Agregar vehículo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ NOTIFICATIONS ══════════ -->
+  <div class="screen" id="s-notif">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Notificaciones</div>
+      <button class="back-btn" onclick="App.markAllRead()" style="font-size:12px;font-weight:700;color:var(--y2);width:auto;padding:0 8px;border-radius:var(--rsm)">Leer todo</button>
+    </div>
+    <div class="scroll" id="notif-list">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- ══════════ REQUEST BOTTOM SHEET ══════════ -->
+  <div class="sheet-overlay" id="sheet-overlay" onclick="App.closeSheet()"></div>
+  <div class="bottom-sheet" id="req-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">¿Qué necesitas?</div>
+    <div class="sheet-sub">Elige el tipo de servicio de grúa</div>
+
+    <div class="svc-card" onclick="App.requestService('transfer')">
+      <div class="svc-card-icon">🚛</div>
+      <div>
+        <div class="svc-card-title">Traslado de vehículo</div>
+        <div class="svc-card-desc">Mueve tu vehículo a un taller, concesionario u otro destino.</div>
+        <div class="svc-card-price">Desde $5.00 + $1.50/km</div>
+      </div>
+    </div>
+
+    <div class="svc-card" onclick="App.requestService('emergency')">
+      <div class="svc-card-icon">🆘</div>
+      <div>
+        <div class="svc-card-title">Emergencia / Accidente</div>
+        <div class="svc-card-desc">Asistencia urgente por accidente, choque o avería grave.</div>
+        <div class="svc-card-price">Desde $10.00 + $1.50/km</div>
+      </div>
+    </div>
+
+    <div class="svc-card" onclick="App.requestService('breakdown')">
+      <div class="svc-card-icon">🔧</div>
+      <div>
+        <div class="svc-card-title">Vehículo varado</div>
+        <div class="svc-card-desc">Tu vehículo no enciende, se quedó sin gasolina o tiene falla mecánica.</div>
+        <div class="svc-card-price">Desde $7.50 + $1.50/km</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar" id="tab-bar">
+    <button class="tab-btn active" id="tab-home" onclick="App.tab('home')">
+      <span class="tab-icon">🏠</span>Inicio
+    </button>
+    <button class="tab-btn" id="tab-history" onclick="App.tab('history')">
+      <span class="tab-icon">📋</span>Historial
+    </button>
+    <button class="tab-btn" id="tab-profile" onclick="App.tab('profile')">
+      <span class="tab-icon">👤</span>Perfil
+    </button>
+  </div>
+
+</div><!-- /phone -->
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   GruaSV – Dashboard Cliente
+   Lee la sesión de localStorage (creada por auth.html).
+   Si no hay sesión, usa datos de demo.
+═══════════════════════════════════════════════════════ */
+
+/* ── Demo data ──────────────────────────────────────── */
+const SERVICES = [
+  {
+    id:'s1', date:'2026-06-03', time:'14:32', type:'transfer', typeName:'Traslado',
+    from:'Col. Escalón, San Salvador', to:'Taller López, Santa Ana',
+    amount:87.50, status:'completed', rating:5,
+    driver:{ name:'Carlos Martínez', rating:4.9, plate:'P-34521', truck:'Kenworth T370', avatar:'👨‍✈️' },
+    fare:{ base:5, dist:78, distAmt:78.00, surcharge:0 },
+    duration:'1 h 12 min', distance:'78 km'
+  },
+  {
+    id:'s2', date:'2026-05-28', time:'09:15', type:'emergency', typeName:'Emergencia',
+    from:'Blvd. del Hipódromo, San Salvador', to:'Taller Automotriz Central, SS',
+    amount:45.00, status:'completed', rating:4,
+    driver:{ name:'Roberto Guevara', rating:4.7, plate:'N-12893', truck:'International 4300', avatar:'👨‍🔧' },
+    fare:{ base:5, dist:18.5, distAmt:27.75, surcharge:5 },
+    duration:'35 min', distance:'18.5 km'
+  },
+  {
+    id:'s3', date:'2026-05-15', time:'18:45', type:'breakdown', typeName:'Varado',
+    from:'Carretera Panamericana km 12', to:'Gasolinera Shell, Soyapango',
+    amount:32.50, status:'completed', rating:5,
+    driver:{ name:'Miguel Rivas', rating:4.8, plate:'C-78234', truck:'Freightliner M2', avatar:'🧑‍✈️' },
+    fare:{ base:5, dist:10, distAmt:15.00, surcharge:2.50 },
+    duration:'28 min', distance:'10 km'
+  },
+  {
+    id:'s4', date:'2026-04-22', time:'11:20', type:'transfer', typeName:'Traslado',
+    from:'Metrocentro, San Salvador', to:'La Libertad',
+    amount:63.00, status:'cancelled', rating:null,
+    driver:null, fare:null, duration:null, distance:'42 km est.'
+  }
+];
+
+const NOTIFICATIONS = [
+  { id:'n1', unread:true, icon:'🚛', bg:'#FFFDE7', title:'Servicio confirmado', body:'Tu solicitud de traslado fue aceptada por Carlos Martínez.', time:'Hace 2 horas' },
+  { id:'n2', unread:true, icon:'⭐', bg:'#F3E5F5', title:'¡Califica tu servicio!', body:'¿Cómo estuvo tu servicio con Roberto Guevara? Déjale una reseña.', time:'Hace 3 días' },
+  { id:'n3', unread:true, icon:'🎉', bg:'#E8F5E9', title:'Bienvenido a GruaSV', body:'Tu cuenta ha sido verificada. Ya puedes solicitar grúas.', time:'Hace 2 semanas' },
+  { id:'n4', unread:false, icon:'💳', bg:'#E3F2FD', title:'Pago procesado', body:'Se procesó tu pago de $87.50 por el servicio del 3 de junio.', time:'Hace 3 días' },
+  { id:'n5', unread:false, icon:'📍', bg:'#FFF8E1', title:'Gruista en camino', body:'Miguel Rivas está a 8 minutos de tu ubicación.', time:'15 May 2026' },
+];
+
+/* ── Helpers ────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+
+const SVC_META = {
+  transfer:  { icon:'🚛', label:'Traslado',    iconBg:'#E3F2FD' },
+  emergency: { icon:'🆘', label:'Emergencia',  iconBg:'#FFEBEE' },
+  breakdown: { icon:'🔧', label:'Varado',       iconBg:'#FFF8E1' },
+};
+
+function stars(n, size = 14) {
+  return Array.from({length:5}, (_,i) =>
+    `<span class="star" style="font-size:${size}px">${i < n ? '⭐' : '☆'}</span>`
+  ).join('');
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('es-SV', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function groupByMonth(services) {
+  const groups = {};
+  services.forEach(s => {
+    const d = new Date(s.date + 'T00:00:00');
+    const key = d.toLocaleDateString('es-SV', { month:'long', year:'numeric' });
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(s);
+  });
+  return groups;
+}
+
+/* ══════════════════════════════════════════════════════
+   APP
+══════════════════════════════════════════════════════ */
+const App = (() => {
+  let _screen = 's-home';
+  let _tab    = 'home';
+  let _stack  = [];
+  let _user   = null;
+  let _filter = 'all';
+  const TABS  = ['s-home','s-history','s-profile'];
+
+  /* ── Toast ──────────────────────────────────────── */
+  function toast(msg, type = '') {
+    const el = $('toast-el');
+    el.textContent = msg;
+    el.className = `toast${type ? ' '+type : ''} show`;
+    setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  /* ── Time ───────────────────────────────────────── */
+  function tick() {
+    const now = new Date();
+    $('sb-time').textContent =
+      `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  }
+
+  /* ── Navigation ─────────────────────────────────── */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+    _screen = id;
+
+    // Status bar
+    const darkScreens = ['s-profile'];
+    $('sb').className = 'sb ' + (darkScreens.includes(id) ? 'dark' : 'light');
+
+    // Tab bar visibility
+    const hideTabs = !TABS.includes(id);
+    $('tab-bar').classList.toggle('hidden', hideTabs);
+  }
+
+  function go(screenId, param) {
+    _stack.push(_screen);
+    if (screenId === 's-detail' && param) renderDetail(param);
+    if (screenId === 's-edit') loadEditForm();
+    if (screenId === 's-vehicles') renderVehicles();
+    if (screenId === 's-notif') renderNotifs();
+    showScreen(screenId);
+  }
+
+  function back() {
+    const prev = _stack.pop() || ('s-' + _tab);
+    if (TABS.includes(prev)) _stack = [];
+    showScreen(prev);
+  }
+
+  function tab(name) {
+    _tab = name;
+    _stack = [];
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    $('tab-' + name).classList.add('active');
+
+    // Update demo nav
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+
+    showScreen('s-' + name);
+
+    if (name === 'profile') loadProfile();
+    if (name === 'history') renderHistory(_filter);
+  }
+
+  /* ── Session / User ─────────────────────────────── */
+  function loadUser() {
+    const raw = localStorage.getItem('gruasv_session');
+    if (raw) {
+      try { _user = JSON.parse(raw); } catch {}
+    }
+    // Fallback demo user
+    if (!_user) {
+      _user = {
+        name:'Juan Alberto Pérez', email:'juan@correo.com',
+        phone:'7123-4567', role:'client',
+        createdAt: new Date(Date.now() - 30*24*3600*1000).toISOString(),
+        vehicle:{ brand:'Toyota', model:'Corolla', year:2020, plate:'P-123456', color:'Blanco', type:'sedan' }
+      };
+    }
+  }
+
+  /* ── Home ───────────────────────────────────────── */
+  function loadHome() {
+    const first = _user.name.split(' ')[0];
+    const h = new Date().getHours();
+    const greeting = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+
+    $('greeting-line').textContent = greeting + ' 👋';
+    $('greeting-name').textContent = first;
+    $('home-avatar').textContent = first[0].toUpperCase();
+
+    // Stats
+    const completed = SERVICES.filter(s => s.status === 'completed');
+    const spent = completed.reduce((acc, s) => acc + s.amount, 0);
+    const avgRating = completed.filter(s=>s.rating).reduce((a,s)=>a+s.rating,0) / (completed.filter(s=>s.rating).length || 1);
+
+    $('stat-total').textContent  = SERVICES.length;
+    $('stat-spent').textContent  = '$' + spent.toFixed(0);
+    $('stat-rating').textContent = '⭐ ' + avgRating.toFixed(1);
+
+    // Last service
+    const last = SERVICES[0];
+    const meta = SVC_META[last.type];
+    $('last-service-wrap').innerHTML = `
+      <div class="mini-service-card card-hover" onclick="App.go('s-detail','${last.id}')">
+        <div class="mini-svc-icon" style="background:${meta.iconBg}">${meta.icon}</div>
+        <div class="f1" style="min-width:0">
+          <div class="flex jb aic">
+            <span class="bold f15 cnavy">${meta.label}</span>
+            <span class="bold f15">\$${last.amount.toFixed(2)}</span>
+          </div>
+          <div class="mini-svc-route">${last.from} → ${last.to}</div>
+          <div class="flex aic g8 mt4">
+            <span class="chip chip-green">Completado</span>
+            <div class="stars">${stars(last.rating)}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /* ── History ────────────────────────────────────── */
+  function renderHistory(filter) {
+    _filter = filter;
+    const list = $('history-list');
+    const filtered = filter === 'all' ? SERVICES : SERVICES.filter(s => s.status === filter);
+
+    if (!filtered.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Sin servicios</div>
+          <div class="empty-sub">No tienes servicios ${filter === 'cancelled' ? 'cancelados' : 'completados'} aún.</div>
+        </div>`;
+      return;
+    }
+
+    const groups = groupByMonth(filtered);
+    let html = '';
+    for (const [month, items] of Object.entries(groups)) {
+      html += `<div class="hist-group-label">${month}</div>`;
+      items.forEach(s => {
+        const meta = SVC_META[s.type];
+        const statusChip = s.status === 'completed'
+          ? '<span class="chip chip-green">Completado</span>'
+          : '<span class="chip chip-red">Cancelado</span>';
+        const ratingHtml = s.rating ? `<div class="stars">${stars(s.rating, 12)}</div>` : '';
+        html += `
+          <div class="hist-item" data-status="${s.status}" onclick="App.go('s-detail','${s.id}')">
+            <div class="hist-type-icon ${s.type}">${meta.icon}</div>
+            <div class="hist-body">
+              <div class="hist-header">
+                <span class="hist-type-name">${meta.label}</span>
+                <span class="hist-amount">\$${s.amount.toFixed(2)}</span>
+              </div>
+              <div class="hist-route">
+                <span style="color:var(--grn)">●</span>
+                <span class="dot" style="background:var(--brd)"></span>
+                ${s.from}
+                <span style="margin:0 4px;color:var(--gray)">→</span>
+                ${s.to}
+              </div>
+              <div class="hist-footer">
+                <span class="hist-date">${fmtDate(s.date)} · ${s.time}</span>
+                <div class="flex aic g6">${statusChip}${ratingHtml}</div>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+    list.innerHTML = html;
+  }
+
+  function filterHistory(filter, btn) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    renderHistory(filter);
+  }
+
+  /* ── Service Detail ─────────────────────────────── */
+  function renderDetail(id) {
+    const s = SERVICES.find(x => x.id === id);
+    if (!s) return;
+    const meta = SVC_META[s.type];
+    const statusChip = s.status === 'completed'
+      ? '<span class="chip chip-green">✓ Completado</span>'
+      : '<span class="chip chip-red">✕ Cancelado</span>';
+
+    let fareHtml = '';
+    if (s.fare) {
+      fareHtml = `
+        <div style="padding:0 20px">
+          <div class="f14 bold cnavy mb12">Desglose de tarifa</div>
+          <div class="fare-line">
+            <span class="cgray">Tarifa base</span>
+            <span class="bold">\$${s.fare.base.toFixed(2)}</span>
+          </div>
+          <div class="fare-line">
+            <span class="cgray">Distancia (${s.fare.dist} km × $1.50)</span>
+            <span class="bold">\$${s.fare.distAmt.toFixed(2)}</span>
+          </div>
+          ${s.fare.surcharge ? `
+          <div class="fare-line">
+            <span class="cgray">Cargo por ${meta.label.toLowerCase()}</span>
+            <span class="bold">\$${s.fare.surcharge.toFixed(2)}</span>
+          </div>` : ''}
+          <hr class="hr">
+          <div class="fare-line total">
+            <span class="fare-lbl">Total</span>
+            <span class="fare-val">\$${s.amount.toFixed(2)}</span>
+          </div>
+        </div>`;
+    }
+
+    let driverHtml = '';
+    if (s.driver) {
+      driverHtml = `
+        <div style="padding:0 20px 16px">
+          <div class="f14 bold cnavy mb8">Gruista</div>
+          <div class="detail-driver">
+            <div class="detail-driver-avatar">${s.driver.avatar}</div>
+            <div>
+              <div class="bold f15 cnavy">${s.driver.name}</div>
+              <div class="f13 cgray">${s.driver.truck}</div>
+              <div class="flex aic g8 mt4">
+                <span class="vehicle-plate" style="font-size:11px;padding:2px 8px">${s.driver.plate}</span>
+                <span class="f13">⭐ ${s.driver.rating}</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    let ratingHtml = '';
+    if (s.rating) {
+      ratingHtml = `
+        <div style="padding:0 20px 24px">
+          <div class="detail-rating-row">
+            <div class="f1">
+              <div class="f14 bold cnavy mb4">Tu calificación</div>
+              <div class="stars">${stars(s.rating, 20)}</div>
+            </div>
+          </div>
+        </div>`;
+    } else if (s.status === 'completed') {
+      ratingHtml = `
+        <div style="padding:0 20px 24px">
+          <button class="btn btn-outline" onclick="App.toast('Funcionalidad de calificación próximamente ⭐')">
+            ⭐ Calificar este servicio
+          </button>
+        </div>`;
+    }
+
+    $('detail-body').innerHTML = `
+      <!-- Map -->
+      <div class="detail-map">
+        <svg class="route-line-svg" viewBox="0 0 370 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60 140 C 100 100, 200 80, 310 50" stroke="#F2C94C" stroke-width="3" stroke-dasharray="8 4" fill="none"/>
+          <circle cx="60" cy="140" r="7" fill="#2E7D32" stroke="white" stroke-width="2"/>
+          <circle cx="310" cy="50" r="7" fill="#C62828" stroke="white" stroke-width="2"/>
+        </svg>
+        <div class="detail-map-fade"></div>
+        <div class="detail-status-badge">${statusChip}</div>
+      </div>
+
+      <!-- Header info -->
+      <div style="padding:16px 20px 0">
+        <div class="flex jb aic mb4">
+          <div class="flex aic g8">
+            <span style="font-size:28px">${meta.icon}</span>
+            <div>
+              <div class="f16 bold cnavy">${meta.label}</div>
+              <div class="f13 cgray">${fmtDate(s.date)} · ${s.time}${s.duration ? ' · ' + s.duration : ''}</div>
+            </div>
+          </div>
+          <div style="font-size:24px;font-weight:900;color:var(--navy)">\$${s.amount.toFixed(2)}</div>
+        </div>
+      </div>
+
+      <hr class="hr" style="margin:12px 20px">
+
+      <!-- Route -->
+      <div class="route-block">
+        <div class="route-row">
+          <div class="route-dot-col">
+            <div class="route-dot origin"></div>
+            <div class="route-line"></div>
+          </div>
+          <div>
+            <div class="route-addr">${s.from}</div>
+            <div class="route-sub">Punto de recogida</div>
+          </div>
+        </div>
+        <div class="route-row">
+          <div class="route-dot-col">
+            <div class="route-dot dest"></div>
+          </div>
+          <div>
+            <div class="route-addr">${s.to}</div>
+            <div class="route-sub">Destino${s.distance ? ' · ' + s.distance : ''}</div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="hr" style="margin:4px 20px 16px">
+
+      ${driverHtml}
+      ${fareHtml}
+      <div style="height:16px"></div>
+      ${ratingHtml}
+    `;
+  }
+
+  /* ── Profile ────────────────────────────────────── */
+  function loadProfile() {
+    $('prof-avatar').textContent = _user.name[0];
+    $('prof-name').textContent   = _user.name;
+    $('prof-email').textContent  = _user.email;
+
+    if (_user.createdAt) {
+      const joined = new Date(_user.createdAt);
+      $('prof-since').textContent = 'Miembro desde ' + joined.toLocaleDateString('es-SV', { month:'long', year:'numeric' });
+    }
+
+    const completed = SERVICES.filter(s => s.status === 'completed');
+    const spent     = completed.reduce((a,s) => a + s.amount, 0);
+    const avgRating = completed.filter(s=>s.rating).reduce((a,s) => a + s.rating, 0) / (completed.filter(s=>s.rating).length || 1);
+
+    $('ps-total').textContent  = SERVICES.length;
+    $('ps-spent').textContent  = '$' + spent.toFixed(0);
+    $('ps-rating').textContent = '⭐ ' + avgRating.toFixed(1);
+
+    const v = _user.vehicle;
+    $('menu-vehicle-sub').textContent = v ? `${v.brand} ${v.model} ${v.year} · ${v.plate}` : 'Sin vehículo registrado';
+    $('menu-hist-sub').textContent = `${SERVICES.length} servicios`;
+  }
+
+  /* ── Edit Profile ───────────────────────────────── */
+  function loadEditForm() {
+    $('edit-name').value  = _user.name  || '';
+    $('edit-email').value = _user.email || '';
+    $('edit-phone').value = _user.phone || '';
+    $('edit-avatar-preview').textContent = _user.name[0];
+  }
+
+  function saveProfile() {
+    const name  = $('edit-name').value.trim();
+    const email = $('edit-email').value.trim();
+    const phone = $('edit-phone').value.trim();
+
+    if (!name)  { toast('El nombre es requerido', 'error'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast('Ingresa un correo válido', 'error'); return;
+    }
+
+    _user.name  = name;
+    _user.email = email;
+    _user.phone = phone;
+
+    try {
+      localStorage.setItem('gruasv_session', JSON.stringify(_user));
+      const users = JSON.parse(localStorage.getItem('gruasv_users') || '[]');
+      const idx = users.findIndex(u => u.id === _user.id);
+      if (idx >= 0) { users[idx] = _user; localStorage.setItem('gruasv_users', JSON.stringify(users)); }
+    } catch {}
+
+    toast('Perfil actualizado ✓', 'success');
+    back();
+    loadHome();
+    loadProfile();
+  }
+
+  function changeAvatar() {
+    const emojis = ['😊','🧑','👨','👩','🧔','👤','🦸','🧑‍💼'];
+    const next = emojis[Math.floor(Math.random() * emojis.length)];
+    $('edit-avatar-preview').textContent = next;
+    toast('Foto actualizada ' + next);
+  }
+
+  /* ── Vehicles ───────────────────────────────────── */
+  function renderVehicles() {
+    const wrap = $('vehicles-list');
+    const v = _user.vehicle;
+    if (!v) {
+      wrap.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🚗</div>
+          <div class="empty-title">Sin vehículos</div>
+          <div class="empty-sub">Agrega tu vehículo para agilizar tus solicitudes de grúa.</div>
+        </div>`;
+      return;
+    }
+    const typeIcons = { sedan:'🚗', suv:'🚙', pickup:'🛻', moto:'🏍️', bus:'🚌', otro:'🚘' };
+    wrap.innerHTML = `
+      <div class="vehicle-card primary">
+        <div class="vehicle-card-icon">${typeIcons[v.type] || '🚗'}</div>
+        <div class="f1">
+          <div class="vehicle-name">${v.brand} ${v.model} ${v.year}</div>
+          <div class="flex aic g8 mt4">
+            <span class="vehicle-plate">${v.plate}</span>
+            <span class="primary-badge">⭐ Principal</span>
+          </div>
+          <div class="f13 cgray mt4">${v.color || ''}</div>
+        </div>
+        <button class="btn-xs btn-outline" onclick="App.toast('Editar vehículo próximamente 🛠️')">Editar</button>
+      </div>`;
+  }
+
+  /* ── Notifications ──────────────────────────────── */
+  function renderNotifs() {
+    const list = $('notif-list');
+    list.innerHTML = NOTIFICATIONS.map(n => `
+      <div class="notif-item${n.unread ? ' unread' : ''}" id="notif-${n.id}" onclick="App.readNotif('${n.id}')">
+        <div class="notif-icon-wrap" style="background:${n.bg}">${n.icon}</div>
+        <div class="f1">
+          <div class="notif-title">${n.title}</div>
+          <div class="notif-body">${n.body}</div>
+          <div class="notif-time">${n.time}</div>
+        </div>
+        ${n.unread ? '<div class="unread-dot"></div>' : ''}
+      </div>
+    `).join('');
+  }
+
+  function readNotif(id) {
+    const n = NOTIFICATIONS.find(x => x.id === id);
+    if (n) { n.unread = false; renderNotifs(); }
+    updateBadge();
+  }
+
+  function markAllRead() {
+    NOTIFICATIONS.forEach(n => n.unread = false);
+    renderNotifs();
+    updateBadge();
+    toast('Todas las notificaciones leídas ✓');
+  }
+
+  function updateBadge() {
+    const badge = $('notif-badge');
+    const unread = NOTIFICATIONS.filter(n => n.unread).length;
+    badge.style.display = unread ? 'block' : 'none';
+  }
+
+  /* ── Service Request Sheet ──────────────────────── */
+  function openSheet() {
+    $('sheet-overlay').classList.add('show');
+    $('req-sheet').classList.add('show');
+  }
+
+  function closeSheet() {
+    $('sheet-overlay').classList.remove('show');
+    $('req-sheet').classList.remove('show');
+  }
+
+  function requestService(type) {
+    closeSheet();
+    const meta = SVC_META[type];
+    toast(`Iniciando solicitud de ${meta.label}… 🚛`);
+    // Aquí se enlazaría con el módulo de solicitud (solicitud-grua.html)
+  }
+
+  /* ── Support ────────────────────────────────────── */
+  function support(page) {
+    toast(page === 'terms' ? 'Cargando términos…' : 'Abriendo soporte…');
+  }
+
+  /* ── Logout ─────────────────────────────────────── */
+  function logout() {
+    if (!confirm('¿Cerrar sesión?')) return;
+    localStorage.removeItem('gruasv_session');
+    toast('Sesión cerrada. ¡Hasta pronto!');
+    setTimeout(() => { window.location.href = 'auth.html'; }, 1200);
+  }
+
+  /* ── Init ───────────────────────────────────────── */
+  function init() {
+    tick();
+    setInterval(tick, 30000);
+    loadUser();
+    loadHome();
+    renderHistory('all');
+    renderNotifs();
+    updateBadge();
+  }
+
+  return {
+    tab, go, back,
+    filterHistory, openSheet, closeSheet, requestService,
+    saveProfile, changeAvatar, support, logout,
+    markAllRead, readNotif,
+    toast,
+    init
+  };
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);
+</script>
+</body>
+</html>
