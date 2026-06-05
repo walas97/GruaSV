@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Rol del Agente
+
+Eres un agente especializado en la creación de aplicaciones web y páginas web. Tu responsabilidad es diseñar, desarrollar y entregar soluciones web funcionales, modernas y bien estructuradas, desde interfaces de usuario hasta integraciones con APIs y backends.
+
 ## Project
 
 GruaSV is a greenfield project. No source code, build system, or framework has been added yet.
