@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GruaSV – Acceso</title>
+  <style>
+    /* ── Variables ─────────────────────────────── */
+    :root {
+      --yellow:  #F2C94C;
+      --yellow2: #D4A820;
+      --black:   #1A1A1A;
+      --navy:    #2D3142;
+      --gray:    #9C9DB2;
+      --bg:      #F5F5F7;
+      --white:   #FFFFFF;
+      --green:   #2E7D32;
+      --red:     #C62828;
+      --border:  #E0E0E8;
+      --r:       14px;
+      --r-sm:    8px;
+    }
+
+    /* ── Reset ──────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: #111;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0 40px;
+    }
+
+    /* ── Phone shell ────────────────────────────── */
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: var(--white);
+      border-radius: 48px;
+      border: 10px solid #222;
+      box-shadow: 0 30px 80px rgba(0,0,0,.85), inset 0 0 0 1px #333;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    /* Status bar */
+    .sb {
+      height: 44px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .sb.dark { background: var(--black); color: #fff; }
+    .sb.light { background: var(--white); color: var(--navy); }
+
+    /* ── Screens ────────────────────────────────── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+    .screen.active { display: flex; }
+
+    .scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .scroll::-webkit-scrollbar { display: none; }
+
+    /* Fade-slide animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim { animation: fadeUp .35s ease forwards; }
+
+    /* ── AppBar ─────────────────────────────────── */
+    .appbar {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px 0 4px;
+      flex-shrink: 0;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      gap: 4px;
+    }
+    .appbar-title {
+      flex: 1;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .back-btn {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: none; cursor: pointer;
+      font-size: 22px; border-radius: 50%;
+      color: var(--navy);
+      transition: background .15s;
+    }
+    .back-btn:hover { background: var(--bg); }
+    .spacer { width: 44px; }
+
+    /* ── Step indicator ──────────────────────────── */
+    .steps {
+      display: flex;
+      gap: 6px;
+      padding: 10px 24px 0;
+      justify-content: center;
+    }
+    .step {
+      flex: 1; max-width: 64px; height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      transition: background .3s;
+    }
+    .step.done { background: var(--yellow); }
+
+    /* ── Buttons ─────────────────────────────────── */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%;
+      padding: 15px 20px;
+      border: none; border-radius: var(--r);
+      font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: all .22s;
+    }
+    .btn-primary   { background: var(--yellow); color: var(--black); }
+    .btn-primary:hover { background: var(--yellow2); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(242,201,76,.4); }
+    .btn-outline   { background: transparent; color: var(--navy); border: 1.5px solid var(--border); }
+    .btn-outline:hover { border-color: var(--navy); }
+    .btn-outline-w { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.3); }
+    .btn-outline-w:hover { border-color: rgba(255,255,255,.7); }
+    .btn-ghost     { background: transparent; color: var(--gray); font-size: 14px; font-weight: 500; }
+    .btn:disabled  { opacity: .45; pointer-events: none; }
+    .btn-sm        { padding: 10px 16px; font-size: 14px; }
+
+    /* ── Inputs ──────────────────────────────────── */
+    .fg { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .fg label { font-size: 14px; font-weight: 600; color: var(--navy); }
+
+    .inp, .sel {
+      padding: 13px 16px;
+      background: var(--bg);
+      border: 1.5px solid transparent;
+      border-radius: var(--r);
+      font-size: 15px;
+      color: var(--navy);
+      font-family: inherit;
+      outline: none;
+      width: 100%;
+      transition: border-color .2s, background .2s;
+    }
+    .inp:focus, .sel:focus { border-color: var(--yellow); background: var(--white); }
+    .inp::placeholder { color: #bbb; }
+    .inp.error { border-color: var(--red); }
+    .sel { appearance: none; -webkit-appearance: none; cursor: pointer; }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Password toggle wrapper */
+    .pass-wrap { position: relative; }
+    .pass-wrap .inp { padding-right: 48px; }
+    .pass-eye {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      font-size: 18px; line-height: 1;
+    }
+
+    /* Field error message */
+    .err-msg { font-size: 12px; color: var(--red); margin-top: -10px; margin-bottom: 4px; display: none; }
+    .err-msg.show { display: block; }
+
+    /* ── Option cards (role / service) ───────────── */
+    .opt-card {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 18px 20px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--white);
+      margin-bottom: 12px;
+    }
+    .opt-card:hover, .opt-card.selected {
+      border-color: var(--yellow);
+      background: #FFFBEC;
+      box-shadow: 0 0 0 2px var(--yellow);
+    }
+    .opt-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--yellow); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 26px; flex-shrink: 0;
+    }
+    .opt-title { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+    .opt-desc  { font-size: 13px; color: var(--gray); line-height: 1.4; }
+
+    /* ── OTP inputs ──────────────────────────────── */
+    .otp-row { display: flex; gap: 10px; justify-content: center; }
+    .otp-inp {
+      width: 46px; height: 58px;
+      text-align: center; font-size: 26px; font-weight: 700;
+      border: 2px solid var(--border); border-radius: var(--r-sm);
+      background: var(--bg); color: var(--navy);
+      outline: none; font-family: inherit;
+      transition: border-color .2s;
+    }
+    .otp-inp:focus { border-color: var(--yellow); background: var(--white); }
+    .otp-inp.filled { border-color: var(--green); }
+
+    /* ── File upload ─────────────────────────────── */
+    .upload-box {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--r);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+    .upload-box:hover { border-color: var(--yellow); background: #FFFBEC; }
+    .upload-box input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { font-size: 32px; margin-bottom: 6px; }
+    .upload-label { font-size: 14px; font-weight: 600; color: var(--navy); }
+    .upload-hint  { font-size: 12px; color: var(--gray); margin-top: 3px; }
+    .upload-box.has-file { border-color: var(--green); background: #F1F8F1; }
+    .upload-box.has-file .upload-icon::after { content: ' ✅'; }
+
+    /* ── Toast ───────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
+      background: var(--navy); color: #fff;
+      padding: 12px 24px; border-radius: 100px;
+      font-size: 14px; font-weight: 500; white-space: nowrap;
+      z-index: 999; transition: bottom .35s ease;
+      max-width: 340px; text-align: center;
+    }
+    .toast.show   { bottom: 60px; }
+    .toast.error  { background: var(--red); }
+    .toast.success{ background: var(--green); }
+
+    /* ── Divider ─────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .or-row {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--gray); font-size: 13px; margin: 8px 0 16px;
+    }
+    .or-row::before, .or-row::after { content: ''; flex: 1; border-top: 1px solid var(--border); }
+
+    /* ── Padding helpers ─────────────────────────── */
+    .p24  { padding: 24px; }
+    .px24 { padding-left: 24px; padding-right: 24px; }
+    .pt16 { padding-top: 16px; }
+    .pb24 { padding-bottom: 24px; }
+    .mt8  { margin-top: 8px; }
+    .mt16 { margin-top: 16px; }
+    .mt24 { margin-top: 24px; }
+    .mb8  { margin-bottom: 8px; }
+    .mb16 { margin-bottom: 16px; }
+    .tc   { text-align: center; }
+    .flex { display: flex; }
+    .ai-c { align-items: center; }
+    .jb   { justify-content: space-between; }
+    .g8   { gap: 8px; }
+    .g12  { gap: 12px; }
+    .f1   { flex: 1; }
+    .bold { font-weight: 700; }
+    .f14  { font-size: 14px; }
+    .f13  { font-size: 13px; }
+    .col-gray  { color: var(--gray); }
+    .col-navy  { color: var(--navy); }
+    .col-yellow{ color: var(--yellow2); }
+    .col-red   { color: var(--red); }
+
+    /* ════════════════════════════════════════════
+       SCREEN: SPLASH
+    ════════════════════════════════════════════ */
+    #splash {
+      background: var(--black);
+      align-items: center; justify-content: center;
+      gap: 20px;
+    }
+    @keyframes pulse-logo {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.06); }
+    }
+    .splash-logo { animation: pulse-logo 2.2s ease-in-out infinite; text-align: center; }
+    .splash-truck { font-size: 80px; display: block; }
+    .splash-name  { font-size: 46px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+    .splash-name span { color: var(--yellow); }
+    .splash-tag   { font-size: 15px; color: #888; margin-top: -6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #333;
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin-top: 32px;
+    }
+
+    /* ════════════════════════════════════════════
+       SCREEN: WELCOME
+    ════════════════════════════════════════════ */
+    #welcome {
+      background: var(--black);
+      padding: 0 24px 36px;
+      justify-content: space-between;
+    }
+    .welcome-hero {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+    }
+    .welcome-icon-bg {
+      width: 130px; height: 130px;
+      background: #242424; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 68px;
+    }
+    .welcome-title { font-size: 38px; font-weight: 900; color: #fff; text-align: center; line-height: 1.1; }
+    .welcome-title span { color: var(--yellow); }
+    .welcome-sub  { font-size: 16px; color: #999; text-align: center; line-height: 1.55; max-width: 270px; }
+    .welcome-btns { display: flex; flex-direction: column; gap: 12px; }
+    .driver-link  {
+      text-align: center; margin-top: 8px;
+      font-size: 14px; color: #777;
+      cursor: pointer;
+    }
+    .driver-link span { color: var(--yellow); font-weight: 600; }
+
+    /* ════════════════════════════════════════════
+       SCREEN: LOGIN
+    ════════════════════════════════════════════ */
+    #login { background: var(--white); }
+    .login-logo { font-size: 38px; font-weight: 900; color: var(--navy); }
+    .login-logo span { color: var(--yellow); }
+
+    /* ════════════════════════════════════════════
+       SCREEN: REG-TYPE
+    ════════════════════════════════════════════ */
+    #reg-type { background: var(--white); }
+
+    /* ════════════════════════════════════════════
+       SCREEN: CLIENT STEPS 1 & 2
+    ════════════════════════════════════════════ */
+    #reg-c1, #reg-c2 { background: var(--white); }
+
+    /* ════════════════════════════════════════════
+       SCREEN: DRIVER STEPS 1, 2, 3
+    ════════════════════════════════════════════ */
+    #reg-d1, #reg-d2, #reg-d3 { background: var(--white); }
+
+    /* ════════════════════════════════════════════
+       SCREEN: OTP
+    ════════════════════════════════════════════ */
+    #otp {
+      background: var(--white);
+      align-items: center; justify-content: center;
+      padding: 24px;
+      gap: 0;
+    }
+    .otp-badge {
+      width: 90px; height: 90px;
+      background: #FFFBEC; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 46px; margin-bottom: 20px;
+    }
+
+    /* ════════════════════════════════════════════
+       SCREEN: SUCCESS
+    ════════════════════════════════════════════ */
+    #success {
+      background: var(--black);
+      align-items: center; justify-content: center;
+      padding: 24px; gap: 0; text-align: center;
+    }
+    @keyframes pop {
+      0%   { transform: scale(0); opacity: 0; }
+      70%  { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    .success-icon { font-size: 90px; animation: pop .5s ease forwards; margin-bottom: 20px; }
+    .success-title { font-size: 30px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+    .success-sub   { font-size: 15px; color: #888; line-height: 1.6; max-width: 270px; margin-bottom: 32px; }
+    .success-name  { color: var(--yellow); font-weight: 700; }
+
+    /* ── Demo nav bar ────────────────────────────── */
+    .demo-nav {
+      width: 390px;
+      background: #1a1a1a;
+      border-bottom: 1px solid #2a2a2a;
+      padding: 8px 10px;
+      display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
+    }
+    .demo-btn {
+      padding: 5px 10px;
+      background: #2a2a2a; color: var(--yellow);
+      border: 1px solid #F2C94C30; border-radius: 4px;
+      cursor: pointer; font-size: 10px;
+      transition: all .2s; white-space: nowrap;
+    }
+    .demo-btn:hover, .demo-btn.active { background: var(--yellow); color: #000; }
+
+    /* ── Password strength bar ───────────────────── */
+    .strength-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 2px; width: 0; transition: width .3s, background .3s; }
+
+    /* ── Info banner ─────────────────────────────── */
+    .info-banner {
+      background: #FFFBEC; border: 1px solid #F2C94C55;
+      border-radius: var(--r-sm); padding: 10px 14px;
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 13px; color: var(--navy); line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .info-banner-icon { font-size: 16px; flex-shrink: 0; }
+
+    /* ── Verification pending notice ─────────────── */
+    .pending-notice {
+      background: #EDE7F6; border-left: 3px solid #7B1FA2;
+      border-radius: 0 var(--r-sm) var(--r-sm) 0;
+      padding: 10px 14px; font-size: 13px; color: #4A148C;
+      margin-bottom: 16px; line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Demo navigation -->
+<div class="demo-nav">
+  <button class="demo-btn active" onclick="App.go('splash')">Splash</button>
+  <button class="demo-btn" onclick="App.go('welcome')">Welcome</button>
+  <button class="demo-btn" onclick="App.go('login')">Login</button>
+  <button class="demo-btn" onclick="App.go('reg-type')">Tipo de cuenta</button>
+  <button class="demo-btn" onclick="App.go('reg-c1')">Cliente 1/2</button>
+  <button class="demo-btn" onclick="App.go('reg-c2')">Cliente 2/2</button>
+  <button class="demo-btn" onclick="App.go('reg-d1')">Gruista 1/3</button>
+  <button class="demo-btn" onclick="App.go('reg-d2')">Gruista 2/3</button>
+  <button class="demo-btn" onclick="App.go('reg-d3')">Gruista 3/3</button>
+  <button class="demo-btn" onclick="App.go('otp')">OTP</button>
+  <button class="demo-btn" onclick="App.go('success')">Éxito</button>
+</div>
+
+<!-- Phone frame -->
+<div class="phone">
+
+  <!-- Status bar (updated per screen) -->
+  <div class="sb dark" id="status-bar">
+    <span id="sb-time">9:41</span>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <span>📶</span><span>🔋</span>
+    </div>
+  </div>
+
+  <!-- ══════════ SPLASH ══════════ -->
+  <div class="screen active" id="splash">
+    <div class="splash-logo">
+      <span class="splash-truck">🚛</span>
+      <div class="splash-name">Mi <span>grua</span><span>SV</span></div>
+      <div class="splash-tag">Tu grúa, cuando la necesitas</div>
+    </div>
+    <div class="spinner"></div>
+  </div>
+
+  <!-- ══════════ WELCOME ══════════ -->
+  <div class="screen" id="welcome">
+    <div class="welcome-hero anim">
+      <div class="welcome-icon-bg">🚛</div>
+      <div class="welcome-title">Mi <span>grua</span><span style="color:var(--yellow)">SV</span></div>
+      <div class="welcome-sub">Conectamos conductores de grúa con personas que necesitan asistencia vehicular.</div>
+    </div>
+    <div class="welcome-btns anim">
+      <button class="btn btn-primary" onclick="App.go('login')">Iniciar sesión</button>
+      <button class="btn btn-outline-w" onclick="App.go('reg-type')">Crear cuenta</button>
+      <div class="driver-link" onclick="App.go('reg-type')">¿Eres gruista? <span>Regístrate aquí →</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════ LOGIN ══════════ -->
+  <div class="screen" id="login">
+    <div class="appbar" style="border-bottom:none;">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="spacer"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="tc mb16">
+          <div class="login-logo">Grua<span>SV</span></div>
+          <p class="f14 col-gray mt8">Inicia sesión en tu cuenta</p>
+        </div>
+
+        <div class="fg">
+          <label for="l-email">Correo electrónico</label>
+          <input class="inp" type="email" id="l-email" placeholder="ejemplo@correo.com" autocomplete="email">
+          <span class="err-msg" id="l-email-err">Ingresa un correo válido</span>
+        </div>
+
+        <div class="fg">
+          <label for="l-pass">Contraseña</label>
+          <div class="pass-wrap">
+            <input class="inp" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
+            <button class="pass-eye" onclick="App.togglePass('l-pass',this)" type="button">👁️</button>
+          </div>
+          <span class="err-msg" id="l-pass-err">Ingresa tu contraseña</span>
+        </div>
+
+        <div class="tc mb16">
+          <span class="f13 col-yellow bold" style="cursor:pointer" onclick="App.forgotPassword()">¿Olvidaste tu contraseña?</span>
+        </div>
+
+        <button class="btn btn-primary" onclick="App.doLogin()">Iniciar sesión</button>
+
+        <div class="or-row mt16">o</div>
+
+        <div class="tc f13 col-gray">
+          ¿No tienes cuenta?
+          <span class="col-yellow bold" style="cursor:pointer" onclick="App.go('reg-type')"> Regístrate</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REG-TYPE ══════════ -->
+  <div class="screen" id="reg-type">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Crear cuenta</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="mb24">
+          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px">¿Cómo usarás GruaSV?</div>
+          <div class="f14 col-gray">Elige tu tipo de cuenta para personalizar tu experiencia</div>
+        </div>
+
+        <div class="opt-card" id="card-client" onclick="App.selectRole('client')">
+          <div class="opt-icon">👤</div>
+          <div>
+            <div class="opt-title">Soy cliente</div>
+            <div class="opt-desc">Necesito solicitar servicios de grúa para mi vehículo.</div>
+          </div>
+        </div>
+
+        <div class="opt-card" id="card-driver" onclick="App.selectRole('driver')">
+          <div class="opt-icon">🚚</div>
+          <div>
+            <div class="opt-title">Soy gruista</div>
+            <div class="opt-desc">Tengo una grúa y quiero ofrecer mis servicios.</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary mt24" id="btn-continue-type" disabled onclick="App.continueFromType()">Continuar</button>
+
+        <div class="tc mt16 f13 col-gray">
+          ¿Ya tienes cuenta? <span class="col-yellow bold" style="cursor:pointer" onclick="App.go('login')">Iniciar sesión</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REG-C1 (cliente – datos personales) ══════════ -->
+  <div class="screen" id="reg-c1">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Datos personales</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="steps mb8">
+      <div class="step done"></div>
+      <div class="step"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="fg">
+          <label>Nombre completo</label>
+          <input class="inp" type="text" id="c1-name" placeholder="Juan Alberto Pérez" autocomplete="name">
+          <span class="err-msg" id="c1-name-err">Ingresa tu nombre completo</span>
+        </div>
+        <div class="fg">
+          <label>Correo electrónico</label>
+          <input class="inp" type="email" id="c1-email" placeholder="juan@correo.com" autocomplete="email">
+          <span class="err-msg" id="c1-email-err">Ingresa un correo válido</span>
+        </div>
+        <div class="fg">
+          <label>Número de teléfono</label>
+          <input class="inp" type="tel" id="c1-phone" placeholder="7xxx-xxxx" maxlength="9" autocomplete="tel">
+          <span class="err-msg" id="c1-phone-err">Ingresa un teléfono válido de El Salvador</span>
+        </div>
+        <div class="fg">
+          <label>Contraseña</label>
+          <div class="pass-wrap">
+            <input class="inp" type="password" id="c1-pass" placeholder="Mínimo 8 caracteres" oninput="App.checkStrength('c1-pass','c1-strength')">
+            <button class="pass-eye" onclick="App.togglePass('c1-pass',this)" type="button">👁️</button>
+          </div>
+          <div class="strength-bar"><div class="strength-fill" id="c1-strength"></div></div>
+          <span class="err-msg" id="c1-pass-err">Mínimo 8 caracteres</span>
+        </div>
+        <div class="fg">
+          <label>Confirmar contraseña</label>
+          <div class="pass-wrap">
+            <input class="inp" type="password" id="c1-pass2" placeholder="Repite tu contraseña">
+            <button class="pass-eye" onclick="App.togglePass('c1-pass2',this)" type="button">👁️</button>
+          </div>
+          <span class="err-msg" id="c1-pass2-err">Las contraseñas no coinciden</span>
+        </div>
+        <button class="btn btn-primary mt8" onclick="App.validateC1()">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REG-C2 (cliente – datos del vehículo) ══════════ -->
+  <div class="screen" id="reg-c2">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Tu vehículo</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="steps mb8">
+      <div class="step done"></div>
+      <div class="step done"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="info-banner">
+          <span class="info-banner-icon">ℹ️</span>
+          Puedes agregar o editar tu vehículo en cualquier momento desde tu perfil.
+        </div>
+
+        <div class="row2">
+          <div class="fg">
+            <label>Marca</label>
+            <input class="inp" type="text" id="c2-brand" placeholder="Toyota">
+          </div>
+          <div class="fg">
+            <label>Modelo</label>
+            <input class="inp" type="text" id="c2-model" placeholder="Corolla">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="fg">
+            <label>Año</label>
+            <input class="inp" type="number" id="c2-year" placeholder="2020" min="1990" max="2026">
+          </div>
+          <div class="fg">
+            <label>Color</label>
+            <input class="inp" type="text" id="c2-color" placeholder="Blanco">
+          </div>
+        </div>
+        <div class="fg">
+          <label>Placa</label>
+          <input class="inp" type="text" id="c2-plate" placeholder="P-123456" style="text-transform:uppercase">
+          <span class="err-msg" id="c2-plate-err">Ingresa la placa de tu vehículo</span>
+        </div>
+        <div class="fg">
+          <label>Tipo de vehículo</label>
+          <select class="sel inp" id="c2-type">
+            <option value="">Selecciona tipo…</option>
+            <option value="sedan">Sedán</option>
+            <option value="suv">SUV / Camioneta</option>
+            <option value="pickup">Pick-up</option>
+            <option value="moto">Motocicleta</option>
+            <option value="bus">Microbús / Bus</option>
+            <option value="otro">Otro</option>
+          </select>
+          <span class="err-msg" id="c2-type-err">Selecciona el tipo</span>
+        </div>
+        <button class="btn btn-primary mt8" onclick="App.validateC2()">Crear mi cuenta</button>
+        <button class="btn btn-ghost mt8" onclick="App.skipVehicle()">Omitir por ahora</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REG-D1 (gruista – datos personales) ══════════ -->
+  <div class="screen" id="reg-d1">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Datos personales</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="steps mb8">
+      <div class="step done"></div>
+      <div class="step"></div>
+      <div class="step"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="fg">
+          <label>Nombre completo</label>
+          <input class="inp" type="text" id="d1-name" placeholder="Carlos Roberto Martínez" autocomplete="name">
+          <span class="err-msg" id="d1-name-err">Ingresa tu nombre completo</span>
+        </div>
+        <div class="fg">
+          <label>Correo electrónico</label>
+          <input class="inp" type="email" id="d1-email" placeholder="carlos@correo.com" autocomplete="email">
+          <span class="err-msg" id="d1-email-err">Ingresa un correo válido</span>
+        </div>
+        <div class="fg">
+          <label>Número de teléfono</label>
+          <input class="inp" type="tel" id="d1-phone" placeholder="7xxx-xxxx" maxlength="9" autocomplete="tel">
+          <span class="err-msg" id="d1-phone-err">Ingresa un teléfono válido</span>
+        </div>
+        <div class="row2">
+          <div class="fg">
+            <label>DUI</label>
+            <input class="inp" type="text" id="d1-dui" placeholder="00000000-0" maxlength="10">
+            <span class="err-msg" id="d1-dui-err">DUI inválido</span>
+          </div>
+          <div class="fg">
+            <label>N° Licencia</label>
+            <input class="inp" type="text" id="d1-license" placeholder="000000000">
+          </div>
+        </div>
+        <div class="fg">
+          <label>Vencimiento de licencia</label>
+          <input class="inp" type="date" id="d1-lic-exp">
+          <span class="err-msg" id="d1-lic-err">La licencia debe ser vigente</span>
+        </div>
+        <div class="fg">
+          <label>Contraseña</label>
+          <div class="pass-wrap">
+            <input class="inp" type="password" id="d1-pass" placeholder="Mínimo 8 caracteres" oninput="App.checkStrength('d1-pass','d1-strength')">
+            <button class="pass-eye" onclick="App.togglePass('d1-pass',this)" type="button">👁️</button>
+          </div>
+          <div class="strength-bar"><div class="strength-fill" id="d1-strength"></div></div>
+          <span class="err-msg" id="d1-pass-err">Mínimo 8 caracteres</span>
+        </div>
+        <div class="fg">
+          <label>Confirmar contraseña</label>
+          <div class="pass-wrap">
+            <input class="inp" type="password" id="d1-pass2" placeholder="Repite tu contraseña">
+            <button class="pass-eye" onclick="App.togglePass('d1-pass2',this)" type="button">👁️</button>
+          </div>
+          <span class="err-msg" id="d1-pass2-err">Las contraseñas no coinciden</span>
+        </div>
+        <button class="btn btn-primary mt8" onclick="App.validateD1()">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REG-D2 (gruista – datos de la grúa) ══════════ -->
+  <div class="screen" id="reg-d2">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Tu grúa</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="steps mb8">
+      <div class="step done"></div>
+      <div class="step done"></div>
+      <div class="step"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="row2">
+          <div class="fg">
+            <label>Marca</label>
+            <input class="inp" type="text" id="d2-brand" placeholder="Kenworth">
+          </div>
+          <div class="fg">
+            <label>Modelo</label>
+            <input class="inp" type="text" id="d2-model" placeholder="T370">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="fg">
+            <label>Año</label>
+            <input class="inp" type="number" id="d2-year" placeholder="2018" min="1995" max="2026">
+          </div>
+          <div class="fg">
+            <label>Placa</label>
+            <input class="inp" type="text" id="d2-plate" placeholder="P-12345" style="text-transform:uppercase">
+          </div>
+        </div>
+        <div class="fg">
+          <label>Tipo de grúa</label>
+          <select class="sel inp" id="d2-type">
+            <option value="">Selecciona tipo…</option>
+            <option value="platform">Plataforma (cama baja)</option>
+            <option value="hook">Caballito (gancho)</option>
+            <option value="rotator">Grúa rotatoria</option>
+            <option value="flatbed">Plataforma articulada</option>
+          </select>
+          <span class="err-msg" id="d2-type-err">Selecciona el tipo de grúa</span>
+        </div>
+        <div class="fg">
+          <label>Capacidad máxima</label>
+          <select class="sel inp" id="d2-cap">
+            <option value="">Selecciona capacidad…</option>
+            <option value="2t">Hasta 2 toneladas (autos)</option>
+            <option value="5t">Hasta 5 toneladas (SUV / pick-up)</option>
+            <option value="10t">Hasta 10 toneladas (camiones pequeños)</option>
+            <option value="20t">Más de 10 toneladas (vehículos pesados)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Color de la grúa</label>
+          <input class="inp" type="text" id="d2-color" placeholder="Rojo">
+        </div>
+        <button class="btn btn-primary mt8" onclick="App.validateD2()">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REG-D3 (gruista – documentos) ══════════ -->
+  <div class="screen" id="reg-d3">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Documentos</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="steps mb8">
+      <div class="step done"></div>
+      <div class="step done"></div>
+      <div class="step done"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="pending-notice">
+          📋 Tus documentos serán revisados por nuestro equipo. La cuenta quedará activa en un máximo de 24 horas hábiles.
+        </div>
+
+        <div class="mb16">
+          <div class="f14 bold col-navy mb8">Foto del DUI (ambos lados)</div>
+          <div class="upload-box" id="upload-dui" onclick="document.getElementById('file-dui').click()">
+            <input type="file" id="file-dui" accept="image/*" onchange="App.handleUpload('upload-dui','lbl-dui',this)">
+            <div class="upload-icon">🪪</div>
+            <div class="upload-label" id="lbl-dui">Subir foto del DUI</div>
+            <div class="upload-hint">JPG, PNG · Máx. 5 MB</div>
+          </div>
+        </div>
+
+        <div class="mb16">
+          <div class="f14 bold col-navy mb8">Foto de la licencia de conducir</div>
+          <div class="upload-box" id="upload-lic" onclick="document.getElementById('file-lic').click()">
+            <input type="file" id="file-lic" accept="image/*" onchange="App.handleUpload('upload-lic','lbl-lic',this)">
+            <div class="upload-icon">📄</div>
+            <div class="upload-label" id="lbl-lic">Subir foto de licencia</div>
+            <div class="upload-hint">JPG, PNG · Máx. 5 MB</div>
+          </div>
+        </div>
+
+        <div class="mb16">
+          <div class="f14 bold col-navy mb8">Foto de la grúa (vista frontal)</div>
+          <div class="upload-box" id="upload-truck" onclick="document.getElementById('file-truck').click()">
+            <input type="file" id="file-truck" accept="image/*" onchange="App.handleUpload('upload-truck','lbl-truck',this)">
+            <div class="upload-icon">🚚</div>
+            <div class="upload-label" id="lbl-truck">Subir foto de la grúa</div>
+            <div class="upload-hint">JPG, PNG · Máx. 10 MB</div>
+          </div>
+        </div>
+
+        <div class="mb16">
+          <div class="f14 bold col-navy mb8">Tarjeta de circulación</div>
+          <div class="upload-box" id="upload-circ" onclick="document.getElementById('file-circ').click()">
+            <input type="file" id="file-circ" accept="image/*,application/pdf" onchange="App.handleUpload('upload-circ','lbl-circ',this)">
+            <div class="upload-icon">📋</div>
+            <div class="upload-label" id="lbl-circ">Subir tarjeta de circulación</div>
+            <div class="upload-hint">JPG, PNG, PDF · Máx. 5 MB</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary mt8" onclick="App.validateD3()">Crear mi cuenta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ OTP ══════════ -->
+  <div class="screen" id="otp">
+    <div class="appbar" style="position:absolute;top:44px;left:0;right:0;border:none;background:transparent;">
+      <button class="back-btn" onclick="App.back()">←</button>
+    </div>
+    <div class="otp-badge anim">📱</div>
+    <div class="tc anim">
+      <div style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px">Verifica tu número</div>
+      <div class="f14 col-gray" style="max-width:260px;line-height:1.6">
+        Enviamos un código de 6 dígitos al número<br>
+        <strong id="otp-phone" class="col-navy">+503 7000-0000</strong>
+      </div>
+    </div>
+
+    <div class="otp-row mt24 anim" id="otp-inputs">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.otpNext(this,0)" onkeydown="App.otpBack(event,0)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.otpNext(this,1)" onkeydown="App.otpBack(event,1)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.otpNext(this,2)" onkeydown="App.otpBack(event,2)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.otpNext(this,3)" onkeydown="App.otpBack(event,3)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.otpNext(this,4)" onkeydown="App.otpBack(event,4)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.otpNext(this,5)" onkeydown="App.otpBack(event,5)">
+    </div>
+
+    <span class="err-msg tc" id="otp-err" style="display:block;visibility:hidden;margin-top:10px">Código incorrecto. Inténtalo de nuevo.</span>
+
+    <div style="padding: 0 24px; width:100%;" class="mt16 anim">
+      <button class="btn btn-primary" onclick="App.verifyOTP()">Verificar código</button>
+    </div>
+
+    <div class="tc mt16 f13 col-gray anim">
+      ¿No recibiste el código?
+      <span class="col-yellow bold" style="cursor:pointer" id="resend-btn" onclick="App.resendOTP()"> Reenviar</span>
+      <span id="resend-timer" class="col-gray" style="display:none"> en <span id="timer-count">60</span>s</span>
+    </div>
+
+    <div class="tc mt8 f13 col-gray anim" style="opacity:.6">Demo: usa el código <strong>1 2 3 4 5 6</strong></div>
+  </div>
+
+  <!-- ══════════ SUCCESS ══════════ -->
+  <div class="screen" id="success">
+    <div class="success-icon anim">🎉</div>
+    <div class="success-title anim">¡Bienvenido<span id="success-comma">,</span><br><span class="success-name" id="success-name">Juan</span>!</div>
+    <div class="success-sub anim" id="success-msg">
+      Tu cuenta ha sido creada exitosamente. Ya puedes solicitar servicios de grúa en GruaSV.
+    </div>
+    <div style="padding: 0 24px; width: 100%;" class="anim">
+      <button class="btn btn-primary" onclick="App.goHome()">Ir al inicio →</button>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   GruaSV – Auth Module
+   Estado persiste en localStorage
+   Código OTP de demo: 123456
+══════════════════════════════════════════════════════ */
+
+const App = (() => {
+  /* ── Internal state ─────────────────────────── */
+  let _current = 'splash';
+  let _history = [];
+  let _role = null;   // 'client' | 'driver'
+  let _regData = {};
+  let _timerInterval = null;
+
+  /* ── Helpers ────────────────────────────────── */
+  function $(id) { return document.getElementById(id); }
+
+  function setTime() {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2,'0');
+    const m = now.getMinutes().toString().padStart(2,'0');
+    $('sb-time').textContent = `${h}:${m}`;
+  }
+
+  function toast(msg, type = '') {
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = `toast${type ? ' '+type : ''} show`;
+    setTimeout(() => el.classList.remove('show'), 3200);
+  }
+
+  function showErr(id, show = true) {
+    const el = $(id);
+    if (!el) return;
+    el.style.display = show ? 'block' : 'none';
+  }
+
+  function clearErr(...ids) { ids.forEach(id => showErr(id, false)); }
+
+  function markInvalid(inputId, show = true) {
+    const el = $(inputId);
+    if (!el) return;
+    if (show) el.classList.add('error');
+    else el.classList.remove('error');
+  }
+
+  /* ── Navigation ─────────────────────────────── */
+  function go(screenId, push = true) {
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(s => s.classList.remove('active'));
+
+    const target = $(screenId);
+    if (!target) return;
+    target.classList.add('active');
+
+    if (push && _current !== screenId) _history.push(_current);
+    _current = screenId;
+
+    updateStatusBar(screenId);
+    updateDemoNav(screenId);
+    onScreenEnter(screenId);
+  }
+
+  function back() {
+    if (_history.length) go(_history.pop(), false);
+  }
+
+  function updateStatusBar(id) {
+    const sb = $('status-bar');
+    const darkScreens = ['splash','welcome','otp','success'];
+    sb.className = 'sb ' + (darkScreens.includes(id) ? 'dark' : 'light');
+  }
+
+  function updateDemoNav(id) {
+    document.querySelectorAll('.demo-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.textContent.toLowerCase().replace(/\s/g,'') ===
+          id.toLowerCase().replace(/[-_]/g,'')) {
+        btn.classList.add('active');
+      }
+    });
+  }
+
+  function onScreenEnter(id) {
+    if (id === 'otp') startResendTimer();
+  }
+
+  /* ── Toggle password visibility ─────────────── */
+  function togglePass(inputId, btn) {
+    const inp = $(inputId);
+    if (!inp) return;
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      inp.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
+  /* ── Password strength ───────────────────────── */
+  function checkStrength(inputId, barId) {
+    const val = $(inputId).value;
+    const bar = $(barId);
+    if (!bar) return;
+    let score = 0;
+    if (val.length >= 8)  score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const map = ['0%','25%','50%','75%','100%'];
+    const colors = ['transparent','#C62828','#F57F17','#F9A825','#2E7D32'];
+    bar.style.width  = map[score];
+    bar.style.background = colors[score];
+  }
+
+  /* ── File upload ─────────────────────────────── */
+  function handleUpload(boxId, labelId, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const box = $(boxId);
+    const lbl = $(labelId);
+    box.classList.add('has-file');
+    lbl.textContent = file.name;
+  }
+
+  /* ── Role selection ──────────────────────────── */
+  function selectRole(role) {
+    _role = role;
+    document.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+    $('card-' + (role === 'client' ? 'client' : 'driver')).classList.add('selected');
+    $('btn-continue-type').disabled = false;
+  }
+
+  function continueFromType() {
+    if (!_role) { toast('Selecciona un tipo de cuenta','error'); return; }
+    go(_role === 'client' ? 'reg-c1' : 'reg-d1');
+  }
+
+  /* ── Validators ──────────────────────────────── */
+  function isEmail(v)  { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
+  function isSVPhone(v){ return /^[267]\d{3}-?\d{4}$/.test(v.trim()); }
+  function isDUI(v)    { return /^\d{8}-\d$/.test(v.trim()); }
+  function isFuture(v) { return v && new Date(v) > new Date(); }
+
+  /* ── LOGIN ───────────────────────────────────── */
+  function doLogin() {
+    const email = $('l-email').value.trim();
+    const pass  = $('l-pass').value;
+    let ok = true;
+
+    clearErr('l-email-err','l-pass-err');
+    markInvalid('l-email', false);
+    markInvalid('l-pass', false);
+
+    if (!isEmail(email)) { showErr('l-email-err'); markInvalid('l-email'); ok = false; }
+    if (!pass)           { showErr('l-pass-err');  markInvalid('l-pass');  ok = false; }
+    if (!ok) return;
+
+    const users = JSON.parse(localStorage.getItem('gruasv_users') || '[]');
+    const found = users.find(u => u.email === email && u.password === pass);
+
+    if (!found) {
+      toast('Correo o contraseña incorrectos', 'error');
+      markInvalid('l-email'); markInvalid('l-pass');
+      return;
+    }
+
+    localStorage.setItem('gruasv_session', JSON.stringify(found));
+    toast('¡Bienvenido de nuevo, ' + found.name.split(' ')[0] + '!', 'success');
+    $('success-name').textContent = found.name.split(' ')[0];
+    $('success-comma').textContent = ',';
+    $('success-msg').textContent = found.role === 'driver'
+      ? 'Has iniciado sesión como gruista. Ya puedes recibir solicitudes de servicio.'
+      : 'Has iniciado sesión exitosamente. Ya puedes solicitar servicios de grúa.';
+    setTimeout(() => go('success'), 400);
+  }
+
+  function forgotPassword() {
+    toast('Revisa tu correo para restablecer tu contraseña 📧');
+  }
+
+  /* ── REGISTER CLIENT ─────────────────────────── */
+  function validateC1() {
+    const name  = $('c1-name').value.trim();
+    const email = $('c1-email').value.trim();
+    const phone = $('c1-phone').value.trim();
+    const pass  = $('c1-pass').value;
+    const pass2 = $('c1-pass2').value;
+    let ok = true;
+
+    clearErr('c1-name-err','c1-email-err','c1-phone-err','c1-pass-err','c1-pass2-err');
+    ['c1-name','c1-email','c1-phone','c1-pass','c1-pass2'].forEach(id => markInvalid(id, false));
+
+    if (name.length < 3)     { showErr('c1-name-err');  markInvalid('c1-name');  ok = false; }
+    if (!isEmail(email))     { showErr('c1-email-err'); markInvalid('c1-email'); ok = false; }
+    if (!isSVPhone(phone))   { showErr('c1-phone-err'); markInvalid('c1-phone'); ok = false; }
+    if (pass.length < 8)     { showErr('c1-pass-err');  markInvalid('c1-pass');  ok = false; }
+    if (pass !== pass2)      { showErr('c1-pass2-err'); markInvalid('c1-pass2'); ok = false; }
+    if (!ok) return;
+
+    const users = JSON.parse(localStorage.getItem('gruasv_users') || '[]');
+    if (users.find(u => u.email === email)) {
+      toast('Este correo ya está registrado','error');
+      markInvalid('c1-email');
+      return;
+    }
+
+    _regData = { name, email, phone, password: pass, role: 'client' };
+    $('otp-phone').textContent = '+503 ' + phone;
+    go('reg-c2');
+  }
+
+  function validateC2() {
+    const plate = $('c2-plate').value.trim();
+    const type  = $('c2-type').value;
+    let ok = true;
+
+    clearErr('c2-plate-err','c2-type-err');
+    markInvalid('c2-plate', false);
+
+    if (!plate) { showErr('c2-plate-err'); markInvalid('c2-plate'); ok = false; }
+    if (!type)  { showErr('c2-type-err'); ok = false; }
+    if (!ok) return;
+
+    _regData.vehicle = {
+      brand: $('c2-brand').value.trim(),
+      model: $('c2-model').value.trim(),
+      year:  $('c2-year').value,
+      color: $('c2-color').value.trim(),
+      plate: plate.toUpperCase(),
+      type
+    };
+
+    saveUserAndOTP();
+  }
+
+  function skipVehicle() {
+    saveUserAndOTP();
+  }
+
+  /* ── REGISTER DRIVER ─────────────────────────── */
+  function validateD1() {
+    const name    = $('d1-name').value.trim();
+    const email   = $('d1-email').value.trim();
+    const phone   = $('d1-phone').value.trim();
+    const dui     = $('d1-dui').value.trim();
+    const licExp  = $('d1-lic-exp').value;
+    const pass    = $('d1-pass').value;
+    const pass2   = $('d1-pass2').value;
+    let ok = true;
+
+    clearErr('d1-name-err','d1-email-err','d1-phone-err','d1-dui-err','d1-lic-err','d1-pass-err','d1-pass2-err');
+    ['d1-name','d1-email','d1-phone','d1-dui','d1-pass','d1-pass2'].forEach(id => markInvalid(id, false));
+
+    if (name.length < 3)   { showErr('d1-name-err');  markInvalid('d1-name');  ok = false; }
+    if (!isEmail(email))   { showErr('d1-email-err'); markInvalid('d1-email'); ok = false; }
+    if (!isSVPhone(phone)) { showErr('d1-phone-err'); markInvalid('d1-phone'); ok = false; }
+    if (!isDUI(dui))       { showErr('d1-dui-err');   markInvalid('d1-dui');   ok = false; }
+    if (!isFuture(licExp)) { showErr('d1-lic-err');   ok = false; }
+    if (pass.length < 8)   { showErr('d1-pass-err');  markInvalid('d1-pass');  ok = false; }
+    if (pass !== pass2)    { showErr('d1-pass2-err'); markInvalid('d1-pass2'); ok = false; }
+    if (!ok) return;
+
+    const users = JSON.parse(localStorage.getItem('gruasv_users') || '[]');
+    if (users.find(u => u.email === email)) {
+      toast('Este correo ya está registrado','error');
+      markInvalid('d1-email');
+      return;
+    }
+
+    _regData = {
+      name, email, phone, password: pass, role: 'driver',
+      dui, license: $('d1-license').value.trim(), licenseExp: licExp
+    };
+
+    $('otp-phone').textContent = '+503 ' + phone;
+    go('reg-d2');
+  }
+
+  function validateD2() {
+    const type = $('d2-type').value;
+    let ok = true;
+
+    clearErr('d2-type-err');
+    if (!type) { showErr('d2-type-err'); ok = false; }
+    if (!ok) return;
+
+    _regData.truck = {
+      brand: $('d2-brand').value.trim(),
+      model: $('d2-model').value.trim(),
+      year:  $('d2-year').value,
+      plate: $('d2-plate').value.trim().toUpperCase(),
+      type,
+      capacity: $('d2-cap').value,
+      color: $('d2-color').value.trim()
+    };
+
+    go('reg-d3');
+  }
+
+  function validateD3() {
+    saveUserAndOTP();
+  }
+
+  /* ── Save & go to OTP ────────────────────────── */
+  function saveUserAndOTP() {
+    _regData.id        = 'u_' + Date.now();
+    _regData.createdAt = new Date().toISOString();
+    _regData.status    = _regData.role === 'driver' ? 'pending' : 'active';
+    _regData.avatar    = _regData.role === 'driver' ? '👨‍✈️' : '👤';
+    $('otp-phone').textContent = '+503 ' + _regData.phone;
+    go('otp');
+  }
+
+  /* ── OTP logic ───────────────────────────────── */
+  const OTP_CODE = '123456';
+
+  function otpNext(input, index) {
+    input.value = input.value.replace(/[^0-9]/g,'');
+    const inputs = document.querySelectorAll('.otp-inp');
+    if (input.value && index < 5) inputs[index + 1].focus();
+    inputs[index].classList.toggle('filled', !!input.value);
+  }
+
+  function otpBack(event, index) {
+    const inputs = document.querySelectorAll('.otp-inp');
+    if (event.key === 'Backspace' && !inputs[index].value && index > 0) {
+      inputs[index - 1].focus();
+      inputs[index - 1].classList.remove('filled');
+    }
+  }
+
+  function verifyOTP() {
+    const inputs  = document.querySelectorAll('.otp-inp');
+    const entered = Array.from(inputs).map(i => i.value).join('');
+    const errEl   = $('otp-err');
+
+    if (entered.length < 6) {
+      errEl.style.visibility = 'visible';
+      errEl.textContent = 'Ingresa los 6 dígitos del código';
+      return;
+    }
+
+    if (entered !== OTP_CODE) {
+      errEl.style.visibility = 'visible';
+      errEl.textContent = 'Código incorrecto. Inténtalo de nuevo.';
+      inputs.forEach(i => { i.classList.add('error'); i.value = ''; });
+      inputs[0].focus();
+      return;
+    }
+
+    errEl.style.visibility = 'hidden';
+
+    // Save user to localStorage
+    const users = JSON.parse(localStorage.getItem('gruasv_users') || '[]');
+    users.push(_regData);
+    localStorage.setItem('gruasv_users', JSON.stringify(users));
+    localStorage.setItem('gruasv_session', JSON.stringify(_regData));
+
+    const firstName = _regData.name.split(' ')[0];
+    $('success-name').textContent = firstName;
+    $('success-comma').textContent = ',';
+    $('success-msg').textContent = _regData.role === 'driver'
+      ? `Tu cuenta de gruista está siendo verificada. Recibirás un correo en ${_regData.email} cuando esté activa (máx. 24 h).`
+      : `Tu cuenta ha sido creada exitosamente. Ya puedes solicitar servicios de grúa en GruaSV.`;
+
+    clearInterval(_timerInterval);
+    go('success');
+  }
+
+  function resendOTP() {
+    toast('Código reenviado a ' + _regData.phone);
+    document.querySelectorAll('.otp-inp').forEach(i => { i.value = ''; i.classList.remove('filled','error'); });
+    document.querySelector('.otp-inp').focus();
+    startResendTimer();
+  }
+
+  function startResendTimer() {
+    clearInterval(_timerInterval);
+    let secs = 60;
+    const btn    = $('resend-btn');
+    const timer  = $('resend-timer');
+    const count  = $('timer-count');
+
+    btn.style.display   = 'none';
+    timer.style.display = 'inline';
+    count.textContent   = secs;
+
+    _timerInterval = setInterval(() => {
+      secs--;
+      count.textContent = secs;
+      if (secs <= 0) {
+        clearInterval(_timerInterval);
+        btn.style.display   = 'inline';
+        timer.style.display = 'none';
+      }
+    }, 1000);
+  }
+
+  /* ── Success → Home ──────────────────────────── */
+  function goHome() {
+    const session = JSON.parse(localStorage.getItem('gruasv_session') || 'null');
+    if (session) {
+      toast('Redirigiendo a la aplicación principal…');
+      /* Aquí iría la navegación al módulo principal (index.html o similar) */
+    }
+  }
+
+  /* ── Init ─────────────────────────────────────── */
+  function init() {
+    setTime();
+    setInterval(setTime, 30000);
+
+    const session = JSON.parse(localStorage.getItem('gruasv_session') || 'null');
+
+    // Splash → auto-navigate after 2.5 s
+    setTimeout(() => {
+      go(session ? 'success' : 'welcome', false);
+      if (session) {
+        $('success-name').textContent = session.name.split(' ')[0];
+        $('success-comma').textContent = ',';
+        $('success-msg').textContent = '¡Ya tienes una sesión activa! Pulsa para continuar.';
+      }
+    }, 2500);
+  }
+
+  /* ── Public API ──────────────────────────────── */
+  return {
+    go, back,
+    doLogin, forgotPassword,
+    selectRole, continueFromType,
+    togglePass, checkStrength, handleUpload,
+    validateC1, validateC2, skipVehicle,
+    validateD1, validateD2, validateD3,
+    verifyOTP, otpNext, otpBack, resendOTP,
+    goHome,
+    init
+  };
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);
+</script>
+</body>
+</html>
