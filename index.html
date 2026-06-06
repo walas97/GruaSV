@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GruaSV — Asistencia vial en El Salvador</title>
+<style>
+  :root {
+    --y:    #F2C94C;
+    --yd:   #D4A017;
+    --navy: #2D3142;
+    --blk:  #1A1A1A;
+    --bg:   #F5F5F7;
+    --grn:  #2E7D32;
+    --red:  #C62828;
+    --card: #FFFFFF;
+    --muted:#6B7280;
+    --r:    16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--blk);
+    line-height: 1.5;
+  }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(26,26,26,.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--y);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .nav-logo span { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -.5px; }
+  .nav-logo span b { color: var(--y); }
+  .nav-links { display: flex; align-items: center; gap: 8px; }
+  .nav-btn {
+    padding: 9px 20px; border-radius: 24px; font-size: 14px; font-weight: 600;
+    text-decoration: none; cursor: pointer; border: none; transition: all .18s;
+  }
+  .nav-btn.ghost {
+    background: transparent; color: #fff;
+    border: 1.5px solid rgba(255,255,255,.3);
+  }
+  .nav-btn.ghost:hover { border-color: var(--y); color: var(--y); }
+  .nav-btn.solid {
+    background: var(--y); color: var(--blk);
+  }
+  .nav-btn.solid:hover { background: var(--yd); transform: translateY(-1px); }
+
+  .hero {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #1A1A1A 0%, #2D3142 60%, #1a2438 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 100px 24px 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(242,201,76,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(242,201,76,.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+  .hero-glow {
+    position: absolute; top: 15%; left: 50%;
+    transform: translateX(-50%);
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(242,201,76,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-logo {
+    position: relative; z-index: 1;
+    width: 96px; height: 96px; border-radius: 28px;
+    background: var(--y);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px; margin: 0 auto 28px;
+    box-shadow: 0 0 60px rgba(242,201,76,.4), 0 8px 32px rgba(0,0,0,.5);
+  }
+  .hero-badge {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(242,201,76,.12); border: 1px solid rgba(242,201,76,.3);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 12px; font-weight: 600; color: var(--y); letter-spacing: .5px;
+    text-transform: uppercase; margin-bottom: 24px;
+  }
+  .hero-badge::before { content: '●'; font-size: 8px; animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .hero h1 {
+    position: relative; z-index: 1;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800; color: #fff; letter-spacing: -1.5px;
+    line-height: 1.1; margin-bottom: 20px;
+  }
+  .hero h1 span { color: var(--y); }
+  .hero p {
+    position: relative; z-index: 1;
+    font-size: clamp(16px, 2vw, 20px); color: rgba(255,255,255,.65);
+    max-width: 560px; margin: 0 auto 48px;
+  }
+  .hero-ctas {
+    position: relative; z-index: 1;
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 64px;
+  }
+  .cta-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 32px; border-radius: 14px;
+    font-size: 16px; font-weight: 700;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: all .2s; letter-spacing: -.2px;
+  }
+  .cta-btn .icon { font-size: 22px; }
+  .cta-btn.primary { background: var(--y); color: var(--blk); box-shadow: 0 4px 24px rgba(242,201,76,.4); }
+  .cta-btn.primary:hover { background: var(--yd); transform: translateY(-2px); }
+  .cta-btn.secondary { background: rgba(255,255,255,.08); color: #fff; border: 1.5px solid rgba(255,255,255,.2); }
+  .cta-btn.secondary:hover { background: rgba(255,255,255,.14); transform: translateY(-2px); }
+  .hero-stats { position: relative; z-index: 1; display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
+  .stat { text-align: center; }
+  .stat-val { font-size: 28px; font-weight: 800; color: var(--y); display: block; }
+  .stat-lbl { font-size: 12px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .5px; }
+  .scroll-hint {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: rgba(255,255,255,.3); font-size: 11px; text-transform: uppercase; letter-spacing: .8px;
+    animation: bounce 2s infinite;
+  }
+  .scroll-hint svg { width: 20px; height: 20px; }
+  @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+
+  section { padding: 96px 24px; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-tag {
+    display: inline-block; background: rgba(242,201,76,.12); border: 1px solid rgba(242,201,76,.3);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 11px; font-weight: 700; color: var(--y); text-transform: uppercase; letter-spacing: .8px;
+    margin-bottom: 16px;
+  }
+  .section-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
+  .section-sub { font-size: 17px; color: var(--muted); max-width: 520px; }
+
+  .how { background: var(--blk); }
+  .how .section-title { color: #fff; }
+  .how .section-sub { color: rgba(255,255,255,.5); }
+  .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-top: 56px; }
+  .step-card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: var(--r); padding: 28px 24px; transition: border-color .2s; }
+  .step-card:hover { border-color: rgba(242,201,76,.4); }
+  .step-num { width: 44px; height: 44px; border-radius: 12px; background: var(--y); color: var(--blk); font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+  .step-card h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .step-card p  { font-size: 14px; color: rgba(255,255,255,.5); line-height: 1.6; }
+
+  .services { background: var(--bg); }
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 56px; }
+  .service-card { background: var(--card); border-radius: 20px; padding: 32px 28px; border: 1.5px solid #E5E7EB; transition: all .2s; }
+  .service-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.1); border-color: var(--y); }
+  .service-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
+  .service-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+  .service-card p  { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+  .service-price { display: inline-block; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 8px; background: rgba(242,201,76,.15); color: #8B6914; }
+
+  .roles { background: var(--navy); }
+  .roles .section-title { color: #fff; }
+  .roles .section-sub { color: rgba(255,255,255,.55); }
+  .roles .section-tag { background: rgba(242,201,76,.12); color: var(--y); border-color: rgba(242,201,76,.3); }
+  .roles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 56px; }
+  @media (max-width: 680px) { .roles-grid { grid-template-columns: 1fr; } }
+  .role-card { border-radius: 24px; padding: 40px 36px; display: flex; flex-direction: column; transition: transform .2s; }
+  .role-card:hover { transform: translateY(-3px); }
+  .role-card.client  { background: var(--y); color: var(--blk); }
+  .role-card.driver  { background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.12); }
+  .role-card.driver * { color: #fff; }
+  .role-emoji { font-size: 48px; margin-bottom: 20px; }
+  .role-card h3 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .role-card .role-desc { font-size: 15px; opacity: .75; margin-bottom: 28px; }
+  .role-features { list-style: none; margin-bottom: 36px; display: flex; flex-direction: column; gap: 10px; }
+  .role-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; }
+  .role-features li::before { content: '✓'; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+  .role-card.client .role-features li::before { color: var(--blk); }
+  .role-card.driver .role-features li::before { color: var(--y); }
+  .role-actions { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+  .role-action-btn { display: block; text-align: center; padding: 14px 20px; border-radius: 12px; font-size: 15px; font-weight: 700; text-decoration: none; transition: all .18s; }
+  .role-card.client .role-action-btn.main  { background: var(--blk); color: #fff; }
+  .role-card.client .role-action-btn.main:hover { background: #333; }
+  .role-card.client .role-action-btn.ghost { border: 2px solid rgba(0,0,0,.25); color: var(--blk); background: transparent; }
+  .role-card.driver .role-action-btn.main  { background: var(--y); color: var(--blk); }
+  .role-card.driver .role-action-btn.main:hover { background: var(--yd); }
+  .role-card.driver .role-action-btn.ghost { border: 2px solid rgba(255,255,255,.25); color: #fff; background: transparent; }
+
+  .modules { background: var(--bg); }
+  .modules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 48px; }
+  .module-link { background: var(--card); border: 1.5px solid #E5E7EB; border-radius: var(--r); padding: 20px 22px; text-decoration: none; color: var(--blk); display: flex; align-items: center; gap: 14px; transition: all .18s; }
+  .module-link:hover { border-color: var(--y); box-shadow: 0 4px 20px rgba(242,201,76,.15); transform: translateY(-2px); }
+  .module-icon { width: 44px; height: 44px; border-radius: 12px; background: #F5F5F7; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .module-info { min-width: 0; }
+  .module-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .module-file { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: monospace; }
+
+  .coverage { background: #fff; }
+  .coverage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 48px; }
+  .coverage-item { text-align: center; padding: 28px 16px; border-radius: var(--r); border: 1.5px solid #E5E7EB; transition: border-color .18s; }
+  .coverage-item:hover { border-color: var(--y); }
+  .coverage-item .icon { font-size: 32px; margin-bottom: 12px; display: block; }
+  .coverage-item strong { font-size: 15px; font-weight: 700; display: block; margin-bottom: 4px; }
+  .coverage-item span { font-size: 12px; color: var(--muted); }
+
+  footer { background: var(--blk); color: rgba(255,255,255,.5); padding: 48px 24px; text-align: center; }
+  .footer-inner { max-width: 1100px; margin: 0 auto; }
+  .footer-logo { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 16px; }
+  .footer-logo .icon { font-size: 28px; }
+  .footer-logo span { font-size: 20px; font-weight: 700; color: #fff; }
+  .footer-logo span b { color: var(--y); }
+  footer p { font-size: 13px; margin-bottom: 8px; }
+  .footer-links { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+  .footer-links a { color: rgba(255,255,255,.4); font-size: 13px; text-decoration: none; transition: color .15s; }
+  .footer-links a:hover { color: var(--y); }
+  footer hr { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 28px 0 20px; }
+  footer small { font-size: 11px; color: rgba(255,255,255,.25); }
+
+  @media (max-width: 540px) {
+    .nav-links .nav-btn.ghost { display: none; }
+    .cta-btn { width: 100%; justify-content: center; }
+    .hero-ctas { flex-direction: column; width: 100%; max-width: 320px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="logo-icon">🚛</div>
+    <span>Grua<b>SV</b></span>
+  </a>
+  <div class="nav-links">
+    <a href="#servicios" class="nav-btn ghost">Servicios</a>
+    <a href="#como-funciona" class="nav-btn ghost">¿Cómo funciona?</a>
+    <a href="auth.html" class="nav-btn solid">Iniciar sesión</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-badge">Disponible en El Salvador</div>
+  <div class="hero-logo">🚛</div>
+  <h1>Asistencia vial<br><span>cuando más lo necesitas</span></h1>
+  <p>Conectamos conductores de grúa con personas que necesitan mover su vehículo. Rápido, seguro y con precio justo desde cualquier rincón de El Salvador.</p>
+  <div class="hero-ctas">
+    <a href="auth.html?role=client" class="cta-btn primary"><span class="icon">👤</span>Soy Cliente</a>
+    <a href="auth.html?role=driver" class="cta-btn secondary"><span class="icon">🔧</span>Soy Gruista</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">24/7</span><span class="stat-lbl">Disponibilidad</span></div>
+    <div class="stat"><span class="stat-val">&lt;10 min</span><span class="stat-lbl">Tiempo respuesta</span></div>
+    <div class="stat"><span class="stat-val">$15</span><span class="stat-lbl">Desde</span></div>
+    <div class="stat"><span class="stat-val">100%</span><span class="stat-lbl">Cobertura SV</span></div>
+  </div>
+  <div class="scroll-hint">
+    <span>Explorar</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</section>
+
+<section class="how" id="como-funciona">
+  <div class="section-inner">
+    <div class="section-tag">¿Cómo funciona?</div>
+    <h2 class="section-title" style="color:#fff;">En 4 pasos sencillos</h2>
+    <p class="section-sub">Sin llamadas, sin esperas interminables. Todo desde tu celular en minutos.</p>
+    <div class="steps-grid">
+      <div class="step-card"><div class="step-num">1</div><h3>Crea tu cuenta</h3><p>Regístrate como cliente o conductor. Solo necesitas tu DUI, número de celular y datos de tu vehículo.</p></div>
+      <div class="step-card"><div class="step-num">2</div><h3>Solicita el servicio</h3><p>Indica tu ubicación actual y destino en el mapa. Elige el tipo de servicio y ve el precio estimado al instante.</p></div>
+      <div class="step-card"><div class="step-num">3</div><h3>El gruista te contacta</h3><p>Un conductor verificado cercano acepta tu solicitud y ves su ubicación en tiempo real mientras se acerca.</p></div>
+      <div class="step-card"><div class="step-num">4</div><h3>Servicio completado</h3><p>Tu vehículo llega al destino. Paga de forma segura y califica el servicio para ayudar a otros usuarios.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="services" id="servicios">
+  <div class="section-inner">
+    <div class="section-tag">Servicios</div>
+    <h2 class="section-title">Lo que ofrecemos</h2>
+    <p class="section-sub">Tres tipos de asistencia para cualquier situación vial en El Salvador.</p>
+    <div class="services-grid">
+      <div class="service-card"><div class="service-icon" style="background:#FFF9E6;">🔧</div><h3>Vehículo Varado</h3><p>Batería descargada, llanta ponchada, falla mecánica inesperada. Te asistimos donde estés para llevarte al taller más cercano.</p><span class="service-price">Desde $15.00</span></div>
+      <div class="service-card"><div class="service-icon" style="background:#FFE8E8;">🚨</div><h3>Emergencia / Accidente</h3><p>Respuesta prioritaria para accidentes de tráfico. Atención rápida con conductores certificados para situaciones críticas.</p><span class="service-price">Desde $15.00</span></div>
+      <div class="service-card"><div class="service-icon" style="background:#E8F5E9;">🚗</div><h3>Traslado de Vehículo</h3><p>Mueve tu vehículo de un lugar a otro sin necesidad de conducirlo. Ideal para compraventas, talleres o cambio de domicilio.</p><span class="service-price">Desde $15.00</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="roles" id="registro">
+  <div class="section-inner">
+    <div class="section-tag">Únete</div>
+    <h2 class="section-title">¿Quién eres tú?</h2>
+    <p class="section-sub">Crea tu cuenta según tu rol y empieza a usar GruaSV hoy mismo.</p>
+    <div class="roles-grid">
+      <div class="role-card client">
+        <div class="role-emoji">👤</div>
+        <h3>Soy Cliente</h3>
+        <p class="role-desc">Necesito asistencia para mi vehículo o quiero trasladarlo.</p>
+        <ul class="role-features">
+          <li>Solicita grúa en tiempo real</li>
+          <li>Rastrea al conductor en el mapa</li>
+          <li>Precio estimado antes de confirmar</li>
+          <li>Historial completo de servicios</li>
+          <li>Califica y comenta cada servicio</li>
+        </ul>
+        <div class="role-actions">
+          <a href="auth.html?role=client&action=register" class="role-action-btn main">Crear cuenta Cliente</a>
+          <a href="auth.html?role=client&action=login" class="role-action-btn ghost">Ya tengo cuenta</a>
+        </div>
+      </div>
+      <div class="role-card driver">
+        <div class="role-emoji">🚛</div>
+        <h3>Soy Gruista</h3>
+        <p class="role-desc">Tengo grúa y quiero generar ingresos con mis servicios.</p>
+        <ul class="role-features">
+          <li>Recibe solicitudes cercanas al instante</li>
+          <li>Establece tu horario de disponibilidad</li>
+          <li>Cobro transparente por kilómetro</li>
+          <li>Estadísticas de ganancias en tiempo real</li>
+          <li>Perfil verificado genera más confianza</li>
+        </ul>
+        <div class="role-actions">
+          <a href="auth.html?role=driver&action=register" class="role-action-btn main">Registrar mi Grúa</a>
+          <a href="auth.html?role=driver&action=login" class="role-action-btn ghost">Ya tengo cuenta</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="coverage">
+  <div class="section-inner" style="text-align:center;">
+    <div class="section-tag">Cobertura</div>
+    <h2 class="section-title">Presentes en todo El Salvador</h2>
+    <p class="section-sub" style="margin:0 auto 0;">Conductores verificados en los principales departamentos del país.</p>
+    <div class="coverage-grid">
+      <div class="coverage-item"><span class="icon">🏙️</span><strong>San Salvador</strong><span>Cobertura completa</span></div>
+      <div class="coverage-item"><span class="icon">🌿</span><strong>Santa Ana</strong><span>Cobertura completa</span></div>
+      <div class="coverage-item"><span class="icon">⚓</span><strong>La Libertad</strong><span>Cobertura completa</span></div>
+      <div class="coverage-item"><span class="icon">🌊</span><strong>Sonsonate</strong><span>Disponible</span></div>
+      <div class="coverage-item"><span class="icon">🏔️</span><strong>San Miguel</strong><span>Disponible</span></div>
+      <div class="coverage-item"><span class="icon">🌳</span><strong>Usulután</strong><span>Próximamente</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="modules">
+  <div class="section-inner">
+    <div class="section-tag">Módulos</div>
+    <h2 class="section-title">Navegar la aplicación</h2>
+    <p class="section-sub">Acceso directo a cada pantalla durante el desarrollo.</p>
+    <div class="modules-grid">
+      <a href="auth.html" class="module-link"><div class="module-icon">🔐</div><div class="module-info"><div class="module-name">Login / Registro</div><div class="module-file">auth.html</div></div></a>
+      <a href="dashboard-cliente.html" class="module-link"><div class="module-icon">📱</div><div class="module-info"><div class="module-name">Dashboard Cliente</div><div class="module-file">dashboard-cliente.html</div></div></a>
+      <a href="solicitud-grua.html" class="module-link"><div class="module-icon">📍</div><div class="module-info"><div class="module-name">Solicitar Grúa</div><div class="module-file">solicitud-grua.html</div></div></a>
+      <a href="dashboard-gruista.html" class="module-link"><div class="module-icon">🚛</div><div class="module-info"><div class="module-name">Dashboard Gruista</div><div class="module-file">dashboard-gruista.html</div></div></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo"><span class="icon">🚛</span><span>Grua<b>SV</b></span></div>
+    <p>Asistencia vial conectada para El Salvador</p>
+    <p>Disponible 24 horas, 7 días a la semana</p>
+    <div class="footer-links">
+      <a href="#como-funciona">¿Cómo funciona?</a>
+      <a href="#servicios">Servicios</a>
+      <a href="#registro">Registro</a>
+      <a href="auth.html">Iniciar sesión</a>
+    </div>
+    <hr>
+    <small>© 2026 GruaSV · El Salvador · Todos los derechos reservados</small>
+  </div>
+</footer>
+
+</body>
+</html>
