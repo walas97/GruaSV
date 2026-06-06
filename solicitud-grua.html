@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GruaSV – Solicitar Grúa</title>
+  <script>
+    window.MAPS_LOADED = false;
+    window._mapsQueue  = [];
+    function initMaps() { window.MAPS_LOADED = true; window._mapsQueue.forEach(fn => fn()); window._mapsQueue = []; }
+    function onMapsReady(fn) { MAPS_LOADED ? fn() : _mapsQueue.push(fn); }
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=TU_CLAVE_AQUI&libraries=places,geometry&callback=initMaps&language=es&region=SV" onerror="console.warn('Google Maps no disponible')"></script>
+  <style>
+:root{--y:#F2C94C;--y2:#D4A820;--blk:#1A1A1A;--navy:#2D3142;--gray:#9C9DB2;--bg:#F5F5F7;--wht:#FFFFFF;--grn:#2E7D32;--red:#C62828;--brd:#E0E0E8;--r:14px;--rsm:8px;--sh:0 4px 20px rgba(0,0,0,.1)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#111;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:20px 0 40px}
+.phone{width:390px;height:844px;background:var(--bg);border-radius:48px;border:10px solid #222;box-shadow:0 30px 80px rgba(0,0,0,.85),inset 0 0 0 1px #333;overflow:hidden;position:relative;display:flex;flex-direction:column;flex-shrink:0}
+.sb{height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:12px;font-weight:600}
+.sb.dark{background:var(--blk);color:#fff}
+.sb.light{background:var(--wht);color:var(--navy)}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;position:relative}
+.screen.active{display:flex}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ping{0%{transform:scale(.8);opacity:.9}100%{transform:scale(3);opacity:0}}
+@keyframes truck{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+.anim{animation:fadeUp .35s ease forwards}
+.appbar{height:56px;display:flex;align-items:center;padding:0 8px 0 4px;flex-shrink:0;gap:4px;background:var(--wht);border-bottom:1px solid var(--brd)}
+.appbar-title{flex:1;text-align:center;font-size:17px;font-weight:700;color:var(--navy)}
+.back-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:20px;border-radius:50%;color:var(--navy);transition:background .15s;box-shadow:var(--sh)}
+.spacer{width:44px;flex-shrink:0}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 20px;border:none;border-radius:var(--r);font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .22s}
+.btn-primary{background:var(--y);color:var(--blk)}
+.btn-primary:hover{background:var(--y2);transform:translateY(-1px)}
+.btn-dark{background:var(--blk);color:var(--wht)}
+.btn-outline{background:transparent;color:var(--navy);border:1.5px solid var(--brd)}
+.btn-ghost{background:transparent;color:var(--red);font-size:14px;font-weight:600}
+.btn:disabled{opacity:.45;pointer-events:none}
+.inp{padding:13px 16px;background:var(--bg);border:1.5px solid transparent;border-radius:var(--r);font-size:15px;color:var(--navy);font-family:inherit;outline:none;width:100%;transition:border-color .2s}
+.inp:focus{border-color:var(--y);background:var(--wht)}
+.inp::placeholder{color:#bbb}
+.p20{padding:20px}.px20{padding-left:20px;padding-right:20px}.pb24{padding-bottom:24px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.mb4{margin-bottom:4px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}
+.tc{text-align:center}.flex{display:flex}.aic{align-items:center}.jb{justify-content:space-between}.jc{justify-content:center}
+.g8{gap:8px}.g12{gap:12px}.f1{flex:1}
+.bold{font-weight:700}.f12{font-size:12px}.f13{font-size:13px}.f14{font-size:14px}.f15{font-size:15px}
+.cgray{color:var(--gray)}.cnavy{color:var(--navy)}.cgrn{color:var(--grn)}.cyellow{color:var(--y2)}.cwht{color:#fff}
+.hr{border:none;border-top:1px solid var(--brd)}
+#s-type{background:var(--wht)}
+.type-hero{background:var(--blk);padding:28px 24px 24px;flex-shrink:0}
+.type-hero-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:4px}
+.type-hero-sub{font-size:14px;color:#888}
+.svc-card{margin:0 20px 14px;padding:18px;border:1.5px solid var(--brd);border-radius:var(--r);display:flex;align-items:center;gap:16px;cursor:pointer;transition:all .2s;background:var(--wht);position:relative}
+.svc-card:hover,.svc-card.sel{border-color:var(--y);background:#FFFBEC;box-shadow:0 0 0 2px var(--y)}
+.svc-card-icon{width:58px;height:58px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0}
+.svc-card-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.svc-card-desc{font-size:13px;color:var(--gray);line-height:1.4}
+.svc-card-price{font-size:12px;font-weight:700;color:var(--y2);margin-top:4px}
+.svc-card-check{position:absolute;top:14px;right:14px;width:22px;height:22px;border-radius:50%;background:var(--y);display:none;align-items:center;justify-content:center;font-size:13px;font-weight:900}
+.svc-card.sel .svc-card-check{display:flex}
+#s-map{background:var(--wht)}
+.map-wrap{flex:1;position:relative;min-height:260px;background:linear-gradient(rgba(200,210,215,.75) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(200,210,215,.75) 1.5px,transparent 1.5px),#EEF2F4;background-size:72px 72px,72px 72px;overflow:hidden}
+#gmap{width:100%;height:100%}
+.map-placeholder-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;pointer-events:none}
+.map-placeholder-msg.hide{display:none}
+.pin-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:rgba(242,201,76,.25);animation:ping 2.2s ease-out infinite}
+.pin-ring:nth-child(2){animation-delay:.7s}
+.pin-core{width:16px;height:16px;border-radius:50%;background:var(--y);border:3px solid var(--wht);box-shadow:0 2px 8px rgba(0,0,0,.3);position:relative;z-index:1}
+.map-pin-anim{position:absolute;top:50%;left:50%;transform:translate(-50%,-70%)}
+.map-toolbar{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:15}
+.map-tool-btn{width:40px;height:40px;background:var(--wht);border:none;border-radius:var(--rsm);box-shadow:var(--sh);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+.route-strip{position:absolute;bottom:0;left:0;right:0;background:rgba(26,26,26,.85);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:space-around;padding:10px 20px}
+.route-strip.show{display:flex}
+.rstrip-val{font-size:15px;font-weight:800;color:var(--y)}
+.rstrip-lbl{font-size:10px;color:#aaa;margin-top:1px;text-align:center}
+.loc-panel{background:var(--wht);border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.1);flex-shrink:0;padding:16px 20px 20px}
+.loc-handle{width:36px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto 16px}
+.loc-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.loc-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.loc-dot.grn{background:var(--grn)}
+.loc-dot.red{background:var(--red)}
+.loc-input-wrap{flex:1;position:relative}
+.loc-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;cursor:pointer;color:var(--gray);display:none}
+.loc-clear.show{display:block}
+.swap-btn{width:36px;height:36px;border-radius:50%;background:var(--bg);border:1.5px solid var(--brd);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0;transition:transform .3s}
+.swap-btn:hover{transform:rotate(180deg)}
+.manual-banner{background:#FFF8E1;border:1px solid #F2C94C55;border-radius:var(--rsm);padding:10px 14px;font-size:13px;color:var(--navy);line-height:1.5;margin-bottom:12px;display:none}
+.manual-banner.show{display:block}
+#s-fare{background:var(--wht)}
+.fare-hero{background:var(--blk);padding:28px 24px;text-align:center;flex-shrink:0}
+.fare-amount{font-size:66px;font-weight:900;color:var(--y);line-height:1}
+.fare-currency{font-size:15px;color:#888;margin-top:4px}
+.fare-svc-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);padding:7px 16px;border-radius:100px;font-size:14px;color:#ccc;margin-top:14px}
+.fare-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--brd)}
+.fare-row:last-child{border-bottom:none}
+.fare-lbl{font-size:14px;color:var(--gray)}
+.fare-val{font-size:14px;font-weight:700;color:var(--navy)}
+.fare-row.total .fare-lbl{font-size:16px;font-weight:800;color:var(--navy)}
+.fare-row.total .fare-val{font-size:17px;font-weight:900;color:var(--grn)}
+.route-summary{background:var(--bg);border-radius:var(--r);padding:14px 16px;margin:0 20px 16px}
+.route-sum-row{display:flex;align-items:flex-start;gap:12px;padding:5px 0}
+.rsdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.rsdot.grn{background:var(--grn)}
+.rsdot.red{background:var(--red)}
+.rstext{font-size:13px;color:var(--navy);line-height:1.4}
+.rssub{font-size:11px;color:var(--gray)}
+.payment-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-top:1px solid var(--brd);cursor:pointer;transition:background .15s}
+.payment-row:hover{background:var(--bg)}
+.pay-icon{width:42px;height:42px;border-radius:var(--rsm);background:var(--bg);border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+#s-confirm{background:var(--wht)}
+.confirm-map-mini{height:160px;flex-shrink:0;position:relative;overflow:hidden;background:linear-gradient(rgba(200,210,215,.65) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(200,210,215,.65) 1.5px,transparent 1.5px),#EEF2F4;background-size:52px 52px}
+#confirm-mini-map{width:100%;height:100%}
+.confirm-map-mini svg{position:absolute;inset:0;width:100%;height:100%;opacity:.65}
+.confirm-amount-badge{position:absolute;top:12px;right:12px;background:var(--blk);color:var(--y);font-size:18px;font-weight:900;padding:8px 16px;border-radius:100px;box-shadow:var(--sh)}
+.confirm-section{padding:16px 20px;border-bottom:1px solid var(--brd)}
+.confirm-label{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.confirm-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.confirm-icon{font-size:22px;flex-shrink:0}
+.confirm-text{font-size:14px;color:var(--navy);line-height:1.4}
+.confirm-subtext{font-size:12px;color:var(--gray)}
+.terms-note{font-size:12px;color:var(--gray);text-align:center;line-height:1.6;padding:0 20px}
+.terms-note a{color:var(--y2);font-weight:600;cursor:pointer}
+#s-searching{background:var(--wht);align-items:center;justify-content:center;padding:40px 32px;text-align:center;gap:0}
+.search-anim{position:relative;width:160px;height:160px;display:flex;align-items:center;justify-content:center;margin-bottom:28px}
+.search-ring{position:absolute;width:100%;height:100%;border-radius:50%;border:2.5px solid var(--y);animation:ping 2.4s ease-out infinite}
+.search-ring:nth-child(2){animation-delay:.8s}
+.search-ring:nth-child(3){animation-delay:1.6s}
+.search-truck{font-size:72px;z-index:1;animation:truck 1s ease-in-out infinite}
+.search-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.search-sub{font-size:14px;color:var(--gray);line-height:1.6;margin-bottom:32px}
+.search-progress{width:220px;height:5px;background:var(--brd);border-radius:3px;overflow:hidden;margin-bottom:32px}
+.search-fill{height:100%;background:var(--y);border-radius:3px;width:0;transition:width .4s ease}
+#s-found{background:var(--wht)}
+.found-hero{background:var(--blk);padding:28px 24px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0}
+.found-avatar{width:80px;height:80px;border-radius:50%;background:var(--y);display:flex;align-items:center;justify-content:center;font-size:42px;border:3px solid rgba(255,255,255,.15)}
+.found-name{font-size:22px;font-weight:900;color:#fff}
+.found-rating{font-size:14px;color:#aaa;display:flex;align-items:center;gap:6px}
+.eta-badge{background:var(--y);color:var(--blk);font-size:13px;font-weight:800;padding:6px 18px;border-radius:100px;margin-top:4px}
+.found-info-row{display:flex;align-items:flex-start;gap:14px;padding:14px 20px;border-bottom:1px solid var(--brd)}
+.fi-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.fi-lbl{font-size:12px;color:var(--gray);margin-bottom:2px}
+.fi-val{font-size:15px;font-weight:600;color:var(--navy)}
+.plate-tag{display:inline-block;background:var(--blk);color:var(--y);font-size:13px;font-weight:800;padding:3px 10px;border-radius:5px;letter-spacing:1.5px;margin-top:2px}
+.contact-row{display:flex;gap:12px;padding:0 20px 20px}
+.contact-btn{flex:1;padding:13px;border-radius:var(--r);border:1.5px solid var(--brd);background:var(--wht);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--navy);transition:all .2s;font-family:inherit}
+.contact-btn:hover{border-color:var(--y);background:#FFFBEC}
+.toast{position:fixed;bottom:-80px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 24px;border-radius:100px;font-size:14px;font-weight:500;white-space:nowrap;z-index:999;transition:bottom .35s ease;max-width:340px;text-align:center}
+.toast.show{bottom:60px}
+.toast.success{background:var(--grn)}
+.toast.error{background:var(--red)}
+.demo-nav{width:390px;background:#1a1a1a;border-bottom:1px solid #2a2a2a;padding:8px 10px;display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.demo-btn{padding:5px 10px;background:#2a2a2a;color:var(--y);border:1px solid #F2C94C30;border-radius:4px;cursor:pointer;font-size:10px;transition:all .2s;white-space:nowrap}
+.demo-btn:hover,.demo-btn.active{background:var(--y);color:#000}
+.pac-container{z-index:9999!important;border-radius:var(--rsm);box-shadow:var(--sh)}
+  </style>
+</head>
+<body>
+<div class="demo-nav">
+  <button class="demo-btn active" onclick="App.go('s-type')">1 Servicio</button>
+  <button class="demo-btn" onclick="App.go('s-map')">2 Ubicación</button>
+  <button class="demo-btn" onclick="App.go('s-fare')">3 Tarifa</button>
+  <button class="demo-btn" onclick="App.go('s-confirm')">4 Confirmar</button>
+  <button class="demo-btn" onclick="App.go('s-searching')">5 Buscando</button>
+  <button class="demo-btn" onclick="App.go('s-found')">6 Gruista</button>
+</div>
+<div class="phone">
+  <div class="sb light" id="sb"><span id="sb-time">9:41</span><div class="flex g8 aic"><span>📶</span><span>🔋</span></div></div>
+  <div class="screen active" id="s-type">
+    <div class="appbar"><button class="back-btn" onclick="App.goBack()">←</button><div class="appbar-title">¿Qué necesitas?</div><div class="spacer"></div></div>
+    <div class="scroll">
+      <div class="type-hero anim"><div class="type-hero-title">Solicitar Grúa</div><div class="type-hero-sub">Elige el tipo de servicio</div></div>
+      <div style="height:16px"></div>
+      <div class="svc-card anim" id="card-transfer" onclick="App.selectType('transfer')"><div class="svc-card-icon" style="background:#E3F2FD">🚛</div><div class="f1"><div class="svc-card-title">Traslado de vehículo</div><div class="svc-card-desc">Mueve tu vehículo a un taller, concesionario u otro destino.</div><div class="svc-card-price">$5.00 base + $1.50/km</div></div><div class="svc-card-check">✓</div></div>
+      <div class="svc-card anim" id="card-emergency" onclick="App.selectType('emergency')"><div class="svc-card-icon" style="background:#FFEBEE">🆘</div><div class="f1"><div class="svc-card-title">Emergencia / Accidente</div><div class="svc-card-desc">Asistencia urgente por accidente, choque o avería grave.</div><div class="svc-card-price">$10.00 base + $1.50/km</div></div><div class="svc-card-check">✓</div></div>
+      <div class="svc-card anim" id="card-breakdown" onclick="App.selectType('breakdown')"><div class="svc-card-icon" style="background:#FFF8E1">🔧</div><div class="f1"><div class="svc-card-title">Vehículo varado</div><div class="svc-card-desc">Tu vehículo no enciende, se quedó sin combustible o tiene falla mecánica.</div><div class="svc-card-price">$7.50 base + $1.50/km</div></div><div class="svc-card-check">✓</div></div>
+      <div class="px20 pb24 mt8"><button class="btn btn-primary" id="btn-next-type" disabled onclick="App.go('s-map')">Continuar →</button></div>
+    </div>
+  </div>
+  <div class="screen" id="s-map">
+    <div class="appbar"><button class="back-btn" onclick="App.back()">←</button><div class="appbar-title">¿Dónde estás?</div><div class="spacer"></div></div>
+    <div class="map-wrap" id="map-wrap">
+      <div id="gmap"></div>
+      <div class="map-placeholder-msg" id="map-placeholder"><div class="map-pin-anim"><div class="pin-ring"></div><div class="pin-ring"></div><div class="pin-core"></div></div><div style="margin-top:40px;font-size:13px;color:#90A4AE;font-weight:500">Cargando mapa…</div></div>
+      <div class="map-toolbar">
+        <button class="map-tool-btn" onclick="App.centerOnUser()">📍</button>
+        <button class="map-tool-btn" onclick="App.zoomIn()">＋</button>
+        <button class="map-tool-btn" onclick="App.zoomOut()">－</button>
+      </div>
+      <div class="route-strip" id="route-strip">
+        <div><div class="rstrip-val" id="strip-dist">—</div><div class="rstrip-lbl">Distancia</div></div>
+        <div><div class="rstrip-val" id="strip-time">—</div><div class="rstrip-lbl">Tiempo est.</div></div>
+        <div><div class="rstrip-val" id="strip-fare">—</div><div class="rstrip-lbl">Tarifa est.</div></div>
+      </div>
+    </div>
+    <div class="loc-panel">
+      <div class="loc-handle"></div>
+      <div class="manual-banner" id="manual-banner">🗺️ <strong>Modo simulado:</strong> Ingresa las direcciones manualmente.</div>
+      <div class="loc-row"><div class="loc-dot grn"></div><div class="loc-input-wrap"><input class="inp" type="text" id="origin-input" placeholder="Tu ubicación actual" oninput="App.onOriginInput()" onfocus="App.focusOrigin()"><button class="loc-clear" id="origin-clear" onclick="App.clearOrigin()">✕</button></div><button class="map-tool-btn" style="box-shadow:none;background:var(--bg)" onclick="App.useCurrentLocation()">🎯</button></div>
+      <div class="flex aic" style="margin:2px 0 2px 6px"><div style="width:2px;height:14px;background:var(--brd);margin-left:5px"></div><div style="flex:1"></div><button class="swap-btn" onclick="App.swapLocations()">⇅</button></div>
+      <div class="loc-row"><div class="loc-dot red"></div><div class="loc-input-wrap"><input class="inp" type="text" id="dest-input" placeholder="¿A dónde llevar tu vehículo?" oninput="App.onDestInput()" onfocus="App.focusDest()"><button class="loc-clear" id="dest-clear" onclick="App.clearDest()">✕</button></div></div>
+      <button class="btn btn-dark mt12" id="btn-confirm-loc" disabled onclick="App.confirmLocations()">Ver tarifa estimada →</button>
+    </div>
+  </div>
+  <div class="screen" id="s-fare">
+    <div class="appbar"><button class="back-btn" onclick="App.back()">←</button><div class="appbar-title">Tarifa estimada</div><div class="spacer"></div></div>
+    <div class="fare-hero anim"><div class="fare-amount" id="fare-total-big">$—</div><div class="fare-currency">dólares americanos · USD</div><div class="fare-svc-badge"><span id="fare-svc-icon">🚛</span><span id="fare-svc-name">Traslado</span> · <span id="fare-dist-label">— km</span></div></div>
+    <div class="scroll">
+      <div class="route-summary anim mt16">
+        <div class="route-sum-row"><div><div class="rsdot grn"></div></div><div><div class="rstext" id="fare-origin-text">—</div><div class="rssub">Origen</div></div></div>
+        <div class="route-sum-row"><div><div class="rsdot red"></div></div><div><div class="rstext" id="fare-dest-text">—</div><div class="rssub">Destino · <span id="fare-duration-label">—</span></div></div></div>
+      </div>
+      <div class="px20 anim">
+        <div class="fare-row"><span class="fare-lbl" id="fl-base-lbl">Tarifa base</span><span class="fare-val" id="fl-base">$—</span></div>
+        <div class="fare-row"><span class="fare-lbl" id="fl-dist-lbl">Distancia</span><span class="fare-val" id="fl-dist">$—</span></div>
+        <div class="fare-row" id="fl-surcharge-row" style="display:none"><span class="fare-lbl" id="fl-surcharge-lbl">Cargo adicional</span><span class="fare-val" id="fl-surcharge">$—</span></div>
+        <hr class="hr">
+        <div class="fare-row total"><span class="fare-lbl">Total estimado</span><span class="fare-val" id="fl-total">$—</span></div>
+      </div>
+      <div class="payment-row anim" onclick="App.changePayment()"><div class="pay-icon">💵</div><div class="f1"><div class="f14 bold cnavy" id="pay-method-name">Efectivo</div><div class="f12 cgray">Paga al gruista al finalizar</div></div><span class="cgray f14">›</span></div>
+      <div class="px20 pb24 mt12"><button class="btn btn-primary" onclick="App.go('s-confirm')">Revisar y confirmar →</button></div>
+    </div>
+  </div>
+  <div class="screen" id="s-confirm">
+    <div class="appbar"><button class="back-btn" onclick="App.back()">←</button><div class="appbar-title">Confirmar pedido</div><div class="spacer"></div></div>
+    <div class="scroll">
+      <div class="confirm-map-mini"><div id="confirm-mini-map"></div><svg id="confirm-svg-route" viewBox="0 0 370 160" fill="none"><path d="M55 130 C 100 90,220 70,315 40" stroke="#F2C94C" stroke-width="3.5" stroke-dasharray="9 5"/><circle cx="55" cy="130" r="8" fill="#2E7D32" stroke="white" stroke-width="2.5"/><circle cx="315" cy="40" r="8" fill="#C62828" stroke="white" stroke-width="2.5"/></svg><div class="confirm-amount-badge" id="confirm-amount-badge">$—</div></div>
+      <div class="confirm-section anim"><div class="confirm-label">Tipo de servicio</div><div class="confirm-row"><div class="confirm-icon" id="cs-svc-icon">🚛</div><div><div class="confirm-text bold" id="cs-svc-name">Traslado</div><div class="confirm-subtext" id="cs-svc-sub">Tarifa base $5.00</div></div></div></div>
+      <div class="confirm-section anim"><div class="confirm-label">Ruta</div><div class="confirm-row"><div class="confirm-icon">🟢</div><div><div class="confirm-text" id="cs-origin">—</div><div class="confirm-subtext">Origen</div></div></div><div class="confirm-row"><div class="confirm-icon">🔴</div><div><div class="confirm-text" id="cs-dest">—</div><div class="confirm-subtext" id="cs-route-info">—</div></div></div></div>
+      <div class="confirm-section anim"><div class="confirm-label">Tu vehículo</div><div class="confirm-row"><div class="confirm-icon" id="cs-veh-icon">🚗</div><div><div class="confirm-text bold" id="cs-veh-name">Toyota Corolla 2020</div><div class="confirm-subtext" id="cs-veh-plate">P-123456</div></div></div></div>
+      <div class="confirm-section anim"><div class="confirm-label">Método de pago</div><div class="confirm-row"><div class="confirm-icon">💵</div><div><div class="confirm-text bold" id="cs-pay-method">Efectivo</div><div class="confirm-subtext">Paga al gruista al finalizar</div></div></div></div>
+      <div class="px20 mt4 anim"><button class="btn btn-primary" onclick="App.confirmRequest()">🚛 Buscar gruista ahora</button><p class="terms-note mt12 pb24">Al confirmar aceptas los <a>Términos de servicio</a> y la <a>Política de privacidad</a> de GruaSV.</p></div>
+    </div>
+  </div>
+  <div class="screen" id="s-searching">
+    <div class="search-anim"><div class="search-ring"></div><div class="search-ring"></div><div class="search-ring"></div><div class="search-truck">🚛</div></div>
+    <div class="search-title">Buscando gruista</div>
+    <div class="search-sub">Estamos conectándote con el conductor<br>más cercano a tu ubicación…</div>
+    <div class="search-progress"><div class="search-fill" id="search-fill"></div></div>
+    <button class="btn btn-ghost" onclick="App.cancelSearch()">Cancelar solicitud</button>
+  </div>
+  <div class="screen" id="s-found">
+    <div class="appbar"><div class="spacer"></div><div class="appbar-title">¡Gruista en camino!</div><div class="spacer"></div></div>
+    <div class="scroll">
+      <div class="found-hero anim"><div class="found-avatar" id="found-avatar">👨‍✈️</div><div class="found-name" id="found-name">Carlos Martínez</div><div class="found-rating">⭐ <span id="found-rating">4.9</span> · <span id="found-trips">312 servicios</span></div><div class="eta-badge">🕐 Llega en <span id="found-eta">8</span> min</div></div>
+      <div class="found-info-row"><div class="fi-icon">🚛</div><div><div class="fi-lbl">Grúa asignada</div><div class="fi-val" id="found-truck">Kenworth T370</div><div class="plate-tag" id="found-plate">P-34521</div></div></div>
+      <div class="found-info-row"><div class="fi-icon">📍</div><div class="f1"><div class="fi-lbl">Punto de recogida</div><div class="fi-val" id="found-pickup">—</div></div></div>
+      <div class="found-info-row"><div class="fi-icon">🏁</div><div class="f1"><div class="fi-lbl">Destino</div><div class="fi-val" id="found-dest">—</div></div></div>
+      <div class="found-info-row"><div class="fi-icon">💰</div><div class="f1"><div class="fi-lbl">Tarifa estimada</div><div class="fi-val" id="found-fare" style="color:var(--grn);font-size:20px;font-weight:900">$—</div></div></div>
+      <div class="contact-row mt4 anim"><button class="contact-btn" onclick="App.callDriver()">📞 Llamar</button><button class="contact-btn" onclick="App.whatsappDriver()">💬 WhatsApp</button></div>
+      <div class="px20 pb24 anim"><button class="btn btn-primary" onclick="App.viewTracking()">🗺️ Ver en mapa en vivo</button><button class="btn btn-ghost mt8" onclick="App.cancelFound()">Cancelar servicio</button></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast-el"></div>
+<script>
+const FARE={transfer:{base:5.00,surcharge:0,name:'Traslado de vehículo',icon:'🚛',subLabel:'Tarifa base $5.00'},emergency:{base:10.00,surcharge:5.00,name:'Emergencia / Accidente',icon:'🆘',subLabel:'Tarifa base $10.00 · Urgente'},breakdown:{base:7.50,surcharge:2.50,name:'Vehículo varado',icon:'🔧',subLabel:'Tarifa base $7.50'}};
+const PER_KM=1.50,MIN_FARE=15.00,SV_CENTER={lat:13.6929,lng:-89.2182};
+const DEMO_DRIVERS=[{name:'Carlos Martínez',avatar:'👨‍✈️',rating:4.9,trips:312,truck:'Kenworth T370',plate:'P-34521',eta:8},{name:'Roberto Guevara',avatar:'👨‍🔧',rating:4.7,trips:189,truck:'International 4300',plate:'N-12893',eta:12},{name:'Miguel Rivas',avatar:'🧑‍✈️',rating:4.8,trips:456,truck:'Freightliner M2',plate:'C-78234',eta:5}];
+const S={screen:'s-type',history:[],type:null,origin:null,dest:null,routeDist:0,routeMin:0,fare:0,fareBreak:null,payMethod:'Efectivo',driver:null,searchTimer:null,map:null,dirService:null,dirRenderer:null,originAC:null,destAC:null,originMarker:null,destMarker:null};
+const $=id=>document.getElementById(id);
+function toast(msg,type=''){const el=$('toast-el');el.textContent=msg;el.className=`toast${type?' '+type:''} show`;setTimeout(()=>el.classList.remove('show'),3000);}
+function tick(){const n=new Date();$('sb-time').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;}
+function calcFare(km,type){const cfg=FARE[type];const distCost=Math.round(km*PER_KM*100)/100;const raw=cfg.base+distCost+cfg.surcharge;const total=Math.max(raw,MIN_FARE);return{base:cfg.base,distKm:Math.round(km*10)/10,distCost,surcharge:cfg.surcharge,total:Math.round(total*100)/100};}
+function fmtUSD(n){return'$'+n.toFixed(2);}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');S.screen=id;$('sb').className='sb '+(['s-found'].includes(id)?'dark':'light');}
+const App={
+  go(id){S.history.push(S.screen);if(id==='s-map')App._enterMap();if(id==='s-fare')App._enterFare();if(id==='s-confirm')App._enterConfirm();if(id==='s-searching')App._startSearch();showScreen(id);},
+  back(){const prev=S.history.pop()||'s-type';showScreen(prev);},
+  goBack(){if(S.history.length)App.back();else window.location.href='dashboard-cliente.html';},
+  selectType(type){S.type=type;document.querySelectorAll('.svc-card').forEach(c=>c.classList.remove('sel'));$('card-'+type).classList.add('sel');$('btn-next-type').disabled=false;},
+  _enterMap(){onMapsReady(()=>App._initMap());if(!MAPS_LOADED){$('map-placeholder').classList.remove('hide');$('manual-banner').classList.add('show');}},
+  _initMap(){if(S.map)return;$('map-placeholder').classList.add('hide');const style=[{featureType:'poi',stylers:[{visibility:'off'}]},{featureType:'road',elementType:'geometry',stylers:[{color:'#ffffff'}]},{featureType:'landscape',stylers:[{color:'#f5f5f0'}]},{featureType:'water',stylers:[{color:'#c9d8e0'}]}];S.map=new google.maps.Map($('gmap'),{center:SV_CENTER,zoom:13,styles:style,disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false});S.dirService=new google.maps.DirectionsService();S.dirRenderer=new google.maps.DirectionsRenderer({map:S.map,suppressMarkers:true,polylineOptions:{strokeColor:'#F2C94C',strokeWeight:5,strokeOpacity:.85}});const acOpts={componentRestrictions:{country:'sv'},fields:['formatted_address','geometry','name']};S.originAC=new google.maps.places.Autocomplete($('origin-input'),acOpts);S.destAC=new google.maps.places.Autocomplete($('dest-input'),acOpts);S.originAC.addListener('place_changed',()=>{const p=S.originAC.getPlace();if(p.geometry){S.origin={address:p.formatted_address||p.name,lat:p.geometry.location.lat(),lng:p.geometry.location.lng()};App._placeMarker('origin',S.origin);App._tryRoute();App._updateClearBtns();}});S.destAC.addListener('place_changed',()=>{const p=S.destAC.getPlace();if(p.geometry){S.dest={address:p.formatted_address||p.name,lat:p.geometry.location.lat(),lng:p.geometry.location.lng()};App._placeMarker('dest',S.dest);App._tryRoute();App._updateClearBtns();}});App._geolocate();},
+  _geolocate(){if(!navigator.geolocation){S.origin={address:'San Salvador, El Salvador',...SV_CENTER};$('origin-input').value=S.origin.address;App._placeMarker('origin',S.origin);App._updateClearBtns();return;}toast('Obteniendo tu ubicación…');navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;const geocoder=new google.maps.Geocoder();geocoder.geocode({location:{lat,lng},language:'es'},(res,status)=>{const addr=(status==='OK'&&res[0])?res[0].formatted_address:'Tu ubicación actual';S.origin={address:addr,lat,lng};$('origin-input').value=addr;App._placeMarker('origin',S.origin);App._updateClearBtns();if(S.map)S.map.panTo({lat,lng});toast('Ubicación obtenida ✓','success');});},()=>{S.origin={address:'San Salvador, El Salvador',...SV_CENTER};$('origin-input').value=S.origin.address;App._placeMarker('origin',S.origin);App._updateClearBtns();});},
+  _placeMarker(type,loc){if(!S.map)return;const colors={origin:'#2E7D32',dest:'#C62828'};const key=type==='origin'?'originMarker':'destMarker';if(S[key])S[key].setMap(null);S[key]=new google.maps.Marker({position:{lat:loc.lat,lng:loc.lng},map:S.map,icon:{path:google.maps.SymbolPath.CIRCLE,fillColor:colors[type],fillOpacity:1,strokeColor:'#fff',strokeWeight:3,scale:10},title:loc.address});S.map.panTo({lat:loc.lat,lng:loc.lng});},
+  _tryRoute(){if(!S.origin||!S.dest||!S.map){App._updateConfirmBtn();return;}S.dirService.route({origin:{lat:S.origin.lat,lng:S.origin.lng},destination:{lat:S.dest.lat,lng:S.dest.lng},travelMode:google.maps.TravelMode.DRIVING,region:'SV'},(result,status)=>{if(status!=='OK'){toast('No se pudo calcular la ruta','error');return;}S.dirRenderer.setDirections(result);const leg=result.routes[0].legs[0];S.routeDist=Math.round(leg.distance.value/100)/10;S.routeMin=Math.ceil(leg.duration.value/60);S.fareBreak=calcFare(S.routeDist,S.type);$('strip-dist').textContent=S.routeDist+' km';$('strip-time').textContent=S.routeMin+' min';$('strip-fare').textContent=fmtUSD(S.fareBreak.total);$('route-strip').classList.add('show');App._updateConfirmBtn();});},
+  _updateConfirmBtn(){$('btn-confirm-loc').disabled=!(S.origin&&S.dest);},
+  _updateClearBtns(){$('origin-clear').classList.toggle('show',!!($('origin-input').value));$('dest-clear').classList.toggle('show',!!($('dest-input').value));},
+  _simulateRoute(){const oA=$('origin-input').value.trim(),dA=$('dest-input').value.trim();if(!oA||!dA){toast('Ingresa origen y destino','error');return false;}const km=Math.round((10+Math.random()*50)*10)/10,min=Math.round(km*1.5);S.origin={address:oA,...SV_CENTER};S.dest={address:dA,lat:SV_CENTER.lat+0.1,lng:SV_CENTER.lng+0.1};S.routeDist=km;S.routeMin=min;S.fareBreak=calcFare(km,S.type);$('strip-dist').textContent=km+' km';$('strip-time').textContent=min+' min';$('strip-fare').textContent=fmtUSD(S.fareBreak.total);$('route-strip').classList.add('show');$('btn-confirm-loc').disabled=false;return true;},
+  onOriginInput(){$('origin-clear').classList.toggle('show',!!($('origin-input').value));if(!MAPS_LOADED)App._updateConfirmBtn();},
+  onDestInput(){$('dest-clear').classList.toggle('show',!!($('dest-input').value));if(!MAPS_LOADED){const o=$('origin-input').value.trim(),d=$('dest-input').value.trim();$('btn-confirm-loc').disabled=!(o&&d);}},
+  focusOrigin(){if(!MAPS_LOADED)$('manual-banner').classList.add('show');},
+  focusDest(){if(!MAPS_LOADED)$('manual-banner').classList.add('show');},
+  clearOrigin(){$('origin-input').value='';S.origin=null;$('origin-clear').classList.remove('show');App._updateConfirmBtn();if(S.originMarker){S.originMarker.setMap(null);S.originMarker=null;}},
+  clearDest(){$('dest-input').value='';S.dest=null;$('dest-clear').classList.remove('show');App._updateConfirmBtn();if(S.destMarker){S.destMarker.setMap(null);S.destMarker=null;}},
+  useCurrentLocation(){if(MAPS_LOADED)App._geolocate();else{$('origin-input').value='Tu ubicación actual (GPS)';S.origin={address:'Tu ubicación actual',...SV_CENTER};App._updateClearBtns();App._updateConfirmBtn();}},
+  swapLocations(){const ov=$('origin-input').value,dv=$('dest-input').value;$('origin-input').value=dv;$('dest-input').value=ov;const tmp=S.origin;S.origin=S.dest;S.dest=tmp;App._updateClearBtns();if(MAPS_LOADED&&S.origin&&S.dest)App._tryRoute();},
+  centerOnUser(){if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(pos=>{if(S.map)S.map.panTo({lat:pos.coords.latitude,lng:pos.coords.longitude});});},
+  zoomIn(){if(S.map)S.map.setZoom(S.map.getZoom()+1);},
+  zoomOut(){if(S.map)S.map.setZoom(S.map.getZoom()-1);},
+  confirmLocations(){if(!MAPS_LOADED){if(!App._simulateRoute())return;}if(!S.origin||!S.dest){toast('Ingresa origen y destino','error');return;}if(!S.fareBreak)S.fareBreak=calcFare(S.routeDist||20,S.type);App.go('s-fare');},
+  _enterFare(){const cfg=FARE[S.type],b=S.fareBreak;$('fare-total-big').textContent=fmtUSD(b.total);$('fare-svc-icon').textContent=cfg.icon;$('fare-svc-name').textContent=cfg.name;$('fare-dist-label').textContent=b.distKm+' km';$('fare-origin-text').textContent=S.origin?.address||'—';$('fare-dest-text').textContent=S.dest?.address||'—';$('fare-duration-label').textContent=S.routeMin?S.routeMin+' min aprox.':'—';$('fl-base-lbl').textContent='Tarifa base ('+cfg.name+')';$('fl-base').textContent=fmtUSD(b.base);$('fl-dist-lbl').textContent=`Distancia (${b.distKm} km × $${PER_KM.toFixed(2)})`;$('fl-dist').textContent=fmtUSD(b.distCost);$('fl-total').textContent=fmtUSD(b.total);if(b.surcharge>0){$('fl-surcharge-row').style.display='flex';$('fl-surcharge-lbl').textContent='Cargo adicional';$('fl-surcharge').textContent=fmtUSD(b.surcharge);}else{$('fl-surcharge-row').style.display='none';}$('pay-method-name').textContent=S.payMethod;},
+  changePayment(){const m=['Efectivo','Tarjeta de crédito','Tarjeta de débito'];const c=m.indexOf(S.payMethod);S.payMethod=m[(c+1)%m.length];$('pay-method-name').textContent=S.payMethod;toast('Método: '+S.payMethod);},
+  _enterConfirm(){const cfg=FARE[S.type],b=S.fareBreak;$('confirm-amount-badge').textContent=fmtUSD(b.total);$('cs-svc-icon').textContent=cfg.icon;$('cs-svc-name').textContent=cfg.name;$('cs-svc-sub').textContent=cfg.subLabel;$('cs-origin').textContent=S.origin?.address||'—';$('cs-dest').textContent=S.dest?.address||'—';$('cs-route-info').textContent=`${b.distKm} km · ${S.routeMin||'—'} min aprox.`;$('cs-pay-method').textContent=S.payMethod;const sess=JSON.parse(localStorage.getItem('gruasv_session')||'{}');const v=sess.vehicle;if(v){const icons={sedan:'🚗',suv:'🚙',pickup:'🛻',moto:'🏍️',bus:'🚌',otro:'🚘'};$('cs-veh-icon').textContent=icons[v.type]||'🚗';$('cs-veh-name').textContent=`${v.brand} ${v.model} ${v.year}`;$('cs-veh-plate').textContent=`${v.plate} · ${v.color}`;}},
+  confirmRequest(){App.go('s-searching');},
+  _startSearch(){const fill=$('search-fill');fill.style.width='0';let pct=0;const step=()=>{pct+=Math.random()*12+4;fill.style.width=Math.min(pct,92)+'%';if(pct<92)S.searchTimer=setTimeout(step,350+Math.random()*200);else{fill.style.width='100%';setTimeout(()=>App._foundDriver(),600);}};S.searchTimer=setTimeout(step,400);},
+  _foundDriver(){S.driver=DEMO_DRIVERS[Math.floor(Math.random()*DEMO_DRIVERS.length)];App.go('s-found');},
+  cancelSearch(){clearTimeout(S.searchTimer);toast('Solicitud cancelada');showScreen('s-type');S.history=[];},
+  callDriver(){toast('Llamando a '+(S.driver?.name||'—')+'…');},
+  whatsappDriver(){toast('Abriendo WhatsApp…');},
+  viewTracking(){toast('Seguimiento en vivo 🗺️');},
+  cancelFound(){if(!confirm('¿Cancelar el servicio?'))return;toast('Servicio cancelado');showScreen('s-type');S.history=[];},
+  init(){tick();setInterval(tick,30000);const params=new URLSearchParams(location.search);const t=params.get('type');if(t&&FARE[t])App.selectType(t);}
+};
+const _origGo=App.go.bind(App);
+App.go=function(id){_origGo(id);if(id==='s-found'&&S.driver){$('found-avatar').textContent=S.driver.avatar;$('found-name').textContent=S.driver.name;$('found-rating').textContent=S.driver.rating;$('found-trips').textContent=S.driver.trips+' servicios';$('found-eta').textContent=S.driver.eta;$('found-truck').textContent=S.driver.truck;$('found-plate').textContent=S.driver.plate;$('found-pickup').textContent=S.origin?.address||'—';$('found-dest').textContent=S.dest?.address||'—';$('found-fare').textContent=S.fareBreak?fmtUSD(S.fareBreak.total):'—';}};
+document.addEventListener('DOMContentLoaded',()=>App.init());
+</script>
+</body>
+</html>
