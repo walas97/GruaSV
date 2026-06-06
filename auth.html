@@ -1346,9 +1346,10 @@ const App = (() => {
   /* ── Success → Home ──────────────────────────── */
   function goHome() {
     const session = JSON.parse(localStorage.getItem('gruasv_session') || 'null');
-    if (session) {
-      toast('Redirigiendo a la aplicación principal…');
-      /* Aquí iría la navegación al módulo principal (index.html o similar) */
+    if (session && session.role === 'driver') {
+      window.location.href = 'dashboard-gruista.html';
+    } else {
+      window.location.href = 'dashboard-cliente.html';
     }
   }
 
