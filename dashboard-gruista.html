@@ -11,13 +11,20 @@
   -->
   <script>
     window.MAPS_LOADED = false;
+    window.MAPS_FAILED = false;
     window._mapsQ = [];
     function initMaps() { window.MAPS_LOADED = true; _mapsQ.forEach(f => f()); _mapsQ = []; }
     function onMapsReady(f) { MAPS_LOADED ? f() : _mapsQ.push(f); }
+    /* Fired by Maps when API key is invalid / unauthorized */
+    function gm_authFailure() {
+      window.MAPS_FAILED = true;
+      window.MAPS_LOADED = false;
+      window._mapsQ = [];
+    }
   </script>
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=TU_CLAVE_AQUI&libraries=places,geometry&callback=initMaps&language=es&region=SV"
-    onerror="console.warn('Google Maps no disponible – modo simulado activo')">
+    onerror="window.MAPS_FAILED=true;window._mapsQ=[];">
   </script>
 
   <style>
@@ -122,6 +129,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 ══════════════════════════════════════════ */
 .map-fill{flex:1;position:relative;overflow:hidden;min-height:200px}
 #map-home,#map-request,#map-nav,#map-service{width:100%;height:100%}
+
+/* No-maps overlay card */
+.no-maps-card{
+  background:rgba(17,17,17,.82);backdrop-filter:blur(6px);
+  border:1px solid #2a2a2a;border-radius:var(--r);
+  padding:18px 24px;text-align:center;
+}
 
 /* CSS map background when Maps not loaded */
 .map-css{
@@ -355,9 +369,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
     <div class="map-fill map-css" id="home-map-wrap">
       <div id="map-home"></div>
       <div class="map-placeholder-msg" id="home-map-msg">
-        <div style="text-align:center">
-          <div style="font-size:18px;font-weight:700;color:#555;margin-bottom:4px">Mapa en modo simulado</div>
-          <div style="font-size:12px;color:#444">Configura tu API Key para ver el mapa real</div>
+        <div class="no-maps-card">
+          <div style="font-size:44px;margin-bottom:10px;opacity:.5">🗺️</div>
+          <div style="font-size:14px;font-weight:700;color:#aaa;margin-bottom:4px">Mapa no disponible</div>
+          <div style="font-size:12px;color:#555;line-height:1.5">Google Maps no está configurado.<br>El dashboard funciona normalmente.</div>
         </div>
       </div>
 
@@ -424,10 +439,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
     <div class="map-fill map-css" id="req-map-wrap">
       <div id="map-request"></div>
       <div class="map-placeholder-msg" id="req-map-msg">
-        <div style="text-align:center">
-          <div style="font-size:48px;margin-bottom:12px">📍</div>
-          <div style="font-size:14px;font-weight:700;color:#aaa">Ubicación del cliente</div>
-          <div style="font-size:12px;color:#555;margin-top:4px" id="req-map-addr">Col. Escalón, San Salvador</div>
+        <div class="no-maps-card">
+          <div style="font-size:36px;margin-bottom:8px">📍</div>
+          <div style="font-size:13px;font-weight:700;color:#aaa;margin-bottom:4px">Ubicación del cliente</div>
+          <div style="font-size:12px;color:#555" id="req-map-addr">Col. Escalón, San Salvador</div>
+          <div style="font-size:11px;color:#444;margin-top:8px;border-top:1px solid #2a2a2a;padding-top:8px">Mapa no disponible · Vista de texto</div>
         </div>
       </div>
 
@@ -522,10 +538,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
     <div class="map-fill map-css" id="nav-map-wrap">
       <div id="map-nav"></div>
       <div class="map-placeholder-msg" id="nav-map-msg">
-        <div style="text-align:center;padding:20px">
-          <div style="font-size:64px;margin-bottom:12px;animation:truckDrive 1s ease-in-out infinite alternate">🚛</div>
-          <div style="font-size:14px;font-weight:700;color:#aaa">Navegando hacia el cliente</div>
-          <div style="font-size:12px;color:#555;margin-top:4px" id="nav-map-dest-lbl">Col. Escalón, San Salvador</div>
+        <div class="no-maps-card">
+          <div style="font-size:52px;margin-bottom:10px;animation:truckDrive 1s ease-in-out infinite alternate">🚛</div>
+          <div style="font-size:14px;font-weight:700;color:#aaa;margin-bottom:4px">Navegando hacia el cliente</div>
+          <div style="font-size:12px;color:#555" id="nav-map-dest-lbl">Col. Escalón, San Salvador</div>
+          <div style="font-size:11px;color:#444;margin-top:8px;border-top:1px solid #2a2a2a;padding-top:8px">Mapa no disponible · Sigue las instrucciones</div>
         </div>
       </div>
 
@@ -681,10 +698,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
     <div class="map-fill map-css" id="svc-map-wrap" style="margin-top:90px">
       <div id="map-service"></div>
       <div class="map-placeholder-msg" id="svc-map-msg">
-        <div style="text-align:center">
-          <div style="font-size:64px;animation:truckDrive 1s ease-in-out infinite alternate">🚛</div>
-          <div style="font-size:14px;font-weight:700;color:#aaa;margin-top:12px">En ruta al destino</div>
-          <div style="font-size:12px;color:#555;margin-top:4px" id="svc-dest-lbl">Taller López, Santa Ana</div>
+        <div class="no-maps-card">
+          <div style="font-size:52px;margin-bottom:10px;animation:truckDrive 1s ease-in-out infinite alternate">🚛</div>
+          <div style="font-size:14px;font-weight:700;color:#aaa;margin-bottom:4px">En ruta al destino</div>
+          <div style="font-size:12px;color:#555" id="svc-dest-lbl">Taller López, Santa Ana</div>
+          <div style="font-size:11px;color:#444;margin-top:8px;border-top:1px solid #2a2a2a;padding-top:8px">Mapa no disponible · Servicio en curso</div>
         </div>
       </div>
       <div class="map-tools" style="top:12px">
@@ -931,7 +949,7 @@ const App = {
     if (id === 's-done')    App._fillDone();
     if (id === 's-history') App._renderHistory();
     showScreen(id);
-    if (MAPS_LOADED) App._initMapForScreen(id);
+    if (MAPS_LOADED && !window.MAPS_FAILED) App._initMapForScreen(id);
   },
 
   back() {
@@ -947,7 +965,7 @@ const App = {
     showScreen('s-' + name);
     if (name === 'profile') App._fillProfile();
     if (name === 'history') App._renderHistory();
-    if (name === 'home' && MAPS_LOADED) App._initHomeMap();
+    if (name === 'home' && MAPS_LOADED && !window.MAPS_FAILED) App._initHomeMap();
   },
 
   /* ── Online/Offline toggle ────────────────────── */
@@ -991,7 +1009,7 @@ const App = {
     App._fillRequest();
     S.history.push(S.screen);
     showScreen('s-request');
-    if (MAPS_LOADED) App._initRequestMap();
+    if (MAPS_LOADED && !window.MAPS_FAILED) App._initRequestMap();
     App._startTimer();
   },
 
@@ -1275,6 +1293,7 @@ const App = {
   },
 
   centerMap() {
+    if (!MAPS_LOADED || window.MAPS_FAILED) { toast('Mapa no disponible'); return; }
     const m = S.maps.home || S.maps.nav || S.maps.svc;
     if (m) m.panTo(SV);
     if (!navigator.geolocation) return;
@@ -1283,8 +1302,8 @@ const App = {
       Object.values(S.maps).forEach(map => { if(map) map.panTo(ll); });
     });
   },
-  zoomIn()  { const m = S.maps.home; if(m) m.setZoom(m.getZoom()+1); },
-  zoomOut() { const m = S.maps.home; if(m) m.setZoom(m.getZoom()-1); },
+  zoomIn()  { const m = S.maps.home; if(m) m.setZoom(m.getZoom()+1); else if(!MAPS_LOADED||window.MAPS_FAILED) toast('Mapa no disponible'); },
+  zoomOut() { const m = S.maps.home; if(m) m.setZoom(m.getZoom()-1); else if(!MAPS_LOADED||window.MAPS_FAILED) toast('Mapa no disponible'); },
 
   /* ── Contact ──────────────────────────────────── */
   callClient() {
@@ -1310,8 +1329,8 @@ const App = {
     App._applyOnlineState();
     App._renderHistory();
     App._fillProfile();
-    // init home map when Maps API is ready
-    onMapsReady(() => App._initHomeMap());
+    // init home map when Maps API is ready (skip if auth failed)
+    onMapsReady(() => { if (!window.MAPS_FAILED) App._initHomeMap(); });
     // Load driver session
     const sess = JSON.parse(localStorage.getItem('gruasv_session') || '{}');
     if (sess.name) {
