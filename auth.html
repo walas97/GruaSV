@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>GruaSV – Acceso</title>
+  <title>Mi Grúa SV – Acceso</title>
   <style>
     /* ── Variables ─────────────────────────────── */
     :root {
@@ -566,7 +566,7 @@
     <div class="scroll">
       <div class="p24 anim">
         <div class="mb24">
-          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px">¿Cómo usarás GruaSV?</div>
+          <div style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px">¿Cómo usarás Mi Grúa SV?</div>
           <div class="f14 col-gray">Elige tu tipo de cuenta para personalizar tu experiencia</div>
         </div>
 
@@ -1050,7 +1050,7 @@
     <div class="success-icon anim">🎉</div>
     <div class="success-title anim">¡Bienvenido<span id="success-comma">,</span><br><span class="success-name" id="success-name">Juan</span>!</div>
     <div class="success-sub anim" id="success-msg">
-      Tu cuenta ha sido creada exitosamente. Ya puedes solicitar servicios de grúa en GruaSV.
+      Tu cuenta ha sido creada exitosamente. Ya puedes solicitar servicios de grúa en Mi Grúa SV.
     </div>
     <div style="padding: 0 24px; width: 100%;" class="anim">
       <button class="btn btn-primary" id="btn-go-home" onclick="App.goHome()">Ir al inicio →</button>
@@ -1065,7 +1065,7 @@
 
 <script>
 /* ══════════════════════════════════════════════════════
-   GruaSV – Auth Module
+   Mi Grúa SV – Auth Module
    Estado persiste en localStorage
    Código OTP de demo: 123456
 ══════════════════════════════════════════════════════ */
@@ -1615,7 +1615,7 @@ const App = (() => {
     $('success-comma').textContent = ',';
     $('success-msg').textContent = _regData.role === 'driver'
       ? `Tu cuenta de gruista está siendo verificada. Recibirás un correo en ${_regData.email} cuando esté activa (máx. 24 h).`
-      : `Tu cuenta ha sido creada exitosamente. Ya puedes solicitar servicios de grúa en GruaSV.`;
+      : `Tu cuenta ha sido creada exitosamente. Ya puedes solicitar servicios de grúa en Mi Grúa SV.`;
 
     clearInterval(_timerInterval);
     go('success');
