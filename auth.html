@@ -275,6 +275,7 @@
     .pt16 { padding-top: 16px; }
     .pb24 { padding-bottom: 24px; }
     .mt8  { margin-top: 8px; }
+    .mt12 { margin-top: 12px; }
     .mt16 { margin-top: 16px; }
     .mt24 { margin-top: 24px; }
     .mb8  { margin-bottom: 8px; }
@@ -1052,8 +1053,9 @@
       Tu cuenta ha sido creada exitosamente. Ya puedes solicitar servicios de grúa en GruaSV.
     </div>
     <div style="padding: 0 24px; width: 100%;" class="anim">
-      <button class="btn btn-primary" onclick="App.goHome()">Ir al inicio →</button>
+      <button class="btn btn-primary" id="btn-go-home" onclick="App.goHome()">Ir al inicio →</button>
     </div>
+    <div class="tc mt12 f13 col-gray anim" id="success-countdown" style="opacity:.7"></div>
   </div>
 
 </div><!-- /phone -->
@@ -1077,6 +1079,8 @@ const App = (() => {
   let _timerInterval = null;
   let _fpEmail = null;
   let _fpTimerInterval = null;
+  let _successTimer = null;
+  let _successCountdown = null;
 
   /* ── Helpers ────────────────────────────────── */
   function $(id) { return document.getElementById(id); }
@@ -1150,6 +1154,39 @@ const App = (() => {
   function onScreenEnter(id) {
     if (id === 'otp') startResendTimer();
     if (id === 'fp-otp') fpStartResendTimer();
+    if (id === 'success') startSuccessRedirect();
+    else cancelSuccessRedirect();
+  }
+
+  function startSuccessRedirect() {
+    cancelSuccessRedirect();
+    let secs = 3;
+    const cd  = $('success-countdown');
+    const btn = $('btn-go-home');
+    if (cd) cd.textContent = `Redirigiendo en ${secs}s…`;
+    if (btn) btn.textContent = `Ir al inicio (${secs}s) →`;
+
+    _successCountdown = setInterval(() => {
+      secs--;
+      if (secs > 0) {
+        if (cd)  cd.textContent  = `Redirigiendo en ${secs}s…`;
+        if (btn) btn.textContent = `Ir al inicio (${secs}s) →`;
+      } else {
+        cancelSuccessRedirect();
+        goHome();
+      }
+    }, 1000);
+  }
+
+  function cancelSuccessRedirect() {
+    clearInterval(_successCountdown);
+    clearTimeout(_successTimer);
+    _successCountdown = null;
+    _successTimer     = null;
+    const cd  = $('success-countdown');
+    const btn = $('btn-go-home');
+    if (cd)  cd.textContent  = '';
+    if (btn) btn.textContent = 'Ir al inicio →';
   }
 
   /* ── Toggle password visibility ─────────────── */
