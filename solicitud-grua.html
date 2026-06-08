@@ -1245,7 +1245,7 @@ const App = {
     $('fl-total').textContent     = fmtUSD(b.total);
     if (b.surcharge > 0) {
       $('fl-surcharge-row').style.display = 'flex';
-      $('fl-surcharge-lbl').textContent   = 'Cargo por ' + S.type === 'emergency' ? 'emergencia' : 'varado';
+      $('fl-surcharge-lbl').textContent   = 'Cargo por ' + (S.type === 'emergency' ? 'emergencia' : 'varado');
       $('fl-surcharge').textContent       = fmtUSD(b.surcharge);
     } else {
       $('fl-surcharge-row').style.display = 'none';

@@ -1666,14 +1666,33 @@ const App = (() => {
     setInterval(setTime, 30000);
 
     const session = JSON.parse(localStorage.getItem('gruasv_session') || 'null');
+    const params  = new URLSearchParams(window.location.search);
+    const role    = params.get('role');
+    const action  = params.get('action');
 
-    // Splash → auto-navigate after 2.5 s
     setTimeout(() => {
-      go(session ? 'success' : 'welcome', false);
       if (session) {
-        $('success-name').textContent = session.name.split(' ')[0];
+        go('success', false);
+        $('success-name').textContent  = session.name.split(' ')[0];
         $('success-comma').textContent = ',';
-        $('success-msg').textContent = '¡Ya tienes una sesión activa! Pulsa para continuar.';
+        $('success-msg').textContent   = '¡Ya tienes una sesión activa! Pulsa para continuar.';
+        return;
+      }
+
+      if (role === 'driver' || role === 'client') {
+        _role = role;
+        if (action === 'register') {
+          go('reg-type', false);
+          const el = $('reg-type');
+          if (el) {
+            const card = el.querySelector(`[data-role="${role}"]`);
+            if (card) card.click();
+          }
+        } else {
+          go('login', false);
+        }
+      } else {
+        go('welcome', false);
       }
     }, 2500);
   }

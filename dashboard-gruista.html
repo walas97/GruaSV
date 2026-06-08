@@ -1058,7 +1058,7 @@ const App = {
   /* ── Accept / Decline ─────────────────────────── */
   acceptRequest() {
     clearInterval(S.timerInterval);
-    toast('¡Solicitud aceptada! Navigando al cliente 🚛', 'success');
+    toast('¡Solicitud aceptada! Navegando al cliente 🚛', 'success');
     setTimeout(() => App.go('s-nav'), 400);
   },
 
@@ -1083,7 +1083,7 @@ const App = {
     $('nav-client-name').textContent   = r.client.name;
     $('nav-client-vehicle').textContent= r.vehicle.split('·').slice(0,2).join('·').trim();
     $('nav-client-avatar').textContent = r.client.initials;
-    $('nav-eta').textContent           = r.distToClient * 3.5 | 0 + ' min';
+    $('nav-eta').textContent           = (r.distToClient * 3.5 | 0) + ' min';
     $('nav-km').textContent            = r.distToClient + ' km';
     $('nav-fare').textContent          = '$' + r.fare.toFixed(2);
     $('nav-instruction').textContent   = 'Sigue recto por Bulevar de los Héroes';

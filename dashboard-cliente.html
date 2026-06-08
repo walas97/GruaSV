@@ -1574,9 +1574,7 @@ const App = (() => {
 
   function requestService(type) {
     closeSheet();
-    const meta = SVC_META[type];
-    toast(`Iniciando solicitud de ${meta.label}… 🚛`);
-    // Aquí se enlazaría con el módulo de solicitud (solicitud-grua.html)
+    setTimeout(() => { window.location.href = 'solicitud-grua.html?type=' + type; }, 200);
   }
 
   /* ── Support ────────────────────────────────────── */
