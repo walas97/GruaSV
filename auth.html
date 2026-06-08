@@ -444,6 +444,16 @@
       padding: 10px 14px; font-size: 13px; color: #4A148C;
       margin-bottom: 16px; line-height: 1.5;
     }
+
+    /* ════════════════════════════════════════════
+       SCREEN: FP-OTP
+    ════════════════════════════════════════════ */
+    #fp-otp {
+      background: var(--white);
+      align-items: center; justify-content: center;
+      padding: 24px;
+      gap: 0;
+    }
   </style>
 </head>
 <body>
@@ -461,6 +471,9 @@
   <button class="demo-btn" onclick="App.go('reg-d3')">Gruista 3/3</button>
   <button class="demo-btn" onclick="App.go('otp')">OTP</button>
   <button class="demo-btn" onclick="App.go('success')">Éxito</button>
+  <button class="demo-btn" onclick="App.go('fp-email')">Olvidé pass</button>
+  <button class="demo-btn" onclick="App.go('fp-otp')">OTP correo</button>
+  <button class="demo-btn" onclick="App.go('fp-newpass')">Nueva pass</button>
 </div>
 
 <!-- Phone frame -->
@@ -925,6 +938,112 @@
     <div class="tc mt8 f13 col-gray anim" style="opacity:.6">Demo: usa el código <strong>1 2 3 4 5 6</strong></div>
   </div>
 
+  <!-- ══════════ FP-EMAIL (olvidé contraseña – correo) ══════════ -->
+  <div class="screen" id="fp-email">
+    <div class="appbar" style="border-bottom:none;">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="spacer"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="tc mb24">
+          <div style="font-size:64px;margin-bottom:16px">🔑</div>
+          <div style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px">¿Olvidaste tu contraseña?</div>
+          <div class="f14 col-gray" style="line-height:1.6;max-width:260px;margin:0 auto">
+            Ingresa tu correo registrado y te enviaremos un código de verificación.
+          </div>
+        </div>
+
+        <div class="fg">
+          <label for="fp-email-inp">Correo electrónico</label>
+          <input class="inp" type="email" id="fp-email-inp" placeholder="ejemplo@correo.com" autocomplete="email">
+          <span class="err-msg" id="fp-email-err">No encontramos una cuenta con ese correo</span>
+        </div>
+
+        <button class="btn btn-primary mt8" onclick="App.fpSubmitEmail()">Enviar código</button>
+        <button class="btn btn-ghost mt8" onclick="App.go('login')">Volver al inicio de sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ FP-OTP (olvidé contraseña – verificación) ══════════ -->
+  <div class="screen" id="fp-otp">
+    <div class="appbar" style="position:absolute;top:44px;left:0;right:0;border:none;background:transparent;">
+      <button class="back-btn" onclick="App.back()">←</button>
+    </div>
+    <div class="otp-badge anim">📧</div>
+    <div class="tc anim">
+      <div style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px">Verifica tu correo</div>
+      <div class="f14 col-gray" style="max-width:260px;line-height:1.6">
+        Enviamos un código de 6 dígitos a<br>
+        <strong id="fp-otp-email" class="col-navy">ejemplo@correo.com</strong>
+      </div>
+    </div>
+
+    <div class="otp-row mt24 anim" id="fp-otp-inputs">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.fpOtpNext(this,0)" onkeydown="App.fpOtpBack(event,0)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.fpOtpNext(this,1)" onkeydown="App.fpOtpBack(event,1)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.fpOtpNext(this,2)" onkeydown="App.fpOtpBack(event,2)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.fpOtpNext(this,3)" onkeydown="App.fpOtpBack(event,3)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.fpOtpNext(this,4)" onkeydown="App.fpOtpBack(event,4)">
+      <input class="otp-inp" type="tel" maxlength="1" oninput="App.fpOtpNext(this,5)" onkeydown="App.fpOtpBack(event,5)">
+    </div>
+
+    <span class="err-msg tc" id="fp-otp-err" style="display:block;visibility:hidden;margin-top:10px">Código incorrecto. Inténtalo de nuevo.</span>
+
+    <div style="padding: 0 24px; width:100%;" class="mt16 anim">
+      <button class="btn btn-primary" onclick="App.fpVerifyOTP()">Verificar código</button>
+    </div>
+
+    <div class="tc mt16 f13 col-gray anim">
+      ¿No recibiste el código?
+      <span class="col-yellow bold" style="cursor:pointer" id="fp-resend-btn" onclick="App.fpResendOTP()"> Reenviar</span>
+      <span id="fp-resend-timer" class="col-gray" style="display:none"> en <span id="fp-timer-count">60</span>s</span>
+    </div>
+
+    <div class="tc mt8 f13 col-gray anim" style="opacity:.6">Demo: usa el código <strong>1 2 3 4 5 6</strong></div>
+  </div>
+
+  <!-- ══════════ FP-NEWPASS (olvidé contraseña – nueva contraseña) ══════════ -->
+  <div class="screen" id="fp-newpass">
+    <div class="appbar">
+      <button class="back-btn" onclick="App.back()">←</button>
+      <div class="appbar-title">Nueva contraseña</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="scroll">
+      <div class="p24 anim">
+        <div class="tc mb24">
+          <div style="font-size:56px;margin-bottom:14px">🔒</div>
+          <div style="font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px">Crea tu nueva contraseña</div>
+          <div class="f14 col-gray">Elige una contraseña segura para tu cuenta</div>
+        </div>
+
+        <div class="fg">
+          <label for="fp-new-pass">Nueva contraseña</label>
+          <div class="pass-wrap">
+            <input class="inp" type="password" id="fp-new-pass" placeholder="Mínimo 8 caracteres"
+              oninput="App.checkStrength('fp-new-pass','fp-strength')">
+            <button class="pass-eye" onclick="App.togglePass('fp-new-pass',this)" type="button">👁️</button>
+          </div>
+          <div class="strength-bar"><div class="strength-fill" id="fp-strength"></div></div>
+          <span class="err-msg" id="fp-pass-err">Mínimo 8 caracteres</span>
+        </div>
+
+        <div class="fg">
+          <label for="fp-new-pass2">Confirmar contraseña</label>
+          <div class="pass-wrap">
+            <input class="inp" type="password" id="fp-new-pass2" placeholder="Repite tu contraseña">
+            <button class="pass-eye" onclick="App.togglePass('fp-new-pass2',this)" type="button">👁️</button>
+          </div>
+          <span class="err-msg" id="fp-pass2-err">Las contraseñas no coinciden</span>
+        </div>
+
+        <button class="btn btn-primary mt8" onclick="App.fpSavePassword()">Guardar contraseña</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════ SUCCESS ══════════ -->
   <div class="screen" id="success">
     <div class="success-icon anim">🎉</div>
@@ -956,6 +1075,8 @@ const App = (() => {
   let _role = null;   // 'client' | 'driver'
   let _regData = {};
   let _timerInterval = null;
+  let _fpEmail = null;
+  let _fpTimerInterval = null;
 
   /* ── Helpers ────────────────────────────────── */
   function $(id) { return document.getElementById(id); }
@@ -1012,7 +1133,7 @@ const App = (() => {
 
   function updateStatusBar(id) {
     const sb = $('status-bar');
-    const darkScreens = ['splash','welcome','otp','success'];
+    const darkScreens = ['splash','welcome','otp','fp-otp','success'];
     sb.className = 'sb ' + (darkScreens.includes(id) ? 'dark' : 'light');
   }
 
@@ -1028,6 +1149,7 @@ const App = (() => {
 
   function onScreenEnter(id) {
     if (id === 'otp') startResendTimer();
+    if (id === 'fp-otp') fpStartResendTimer();
   }
 
   /* ── Toggle password visibility ─────────────── */
@@ -1122,7 +1244,155 @@ const App = (() => {
   }
 
   function forgotPassword() {
-    toast('Revisa tu correo para restablecer tu contraseña 📧');
+    const loginEmail = $('l-email').value.trim();
+    const fpInp = $('fp-email-inp');
+    if (fpInp && loginEmail && isEmail(loginEmail)) fpInp.value = loginEmail;
+    clearErr('fp-email-err');
+    markInvalid('fp-email-inp', false);
+    go('fp-email');
+  }
+
+  /* ── FORGOT PASSWORD FLOW ────────────────────── */
+  function fpSubmitEmail() {
+    const email = $('fp-email-inp').value.trim();
+    clearErr('fp-email-err');
+    markInvalid('fp-email-inp', false);
+
+    if (!isEmail(email)) {
+      $('fp-email-err').textContent = 'Ingresa un correo válido';
+      showErr('fp-email-err');
+      markInvalid('fp-email-inp');
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('gruasv_users') || '[]');
+    const found = users.find(u => u.email === email);
+    if (!found) {
+      $('fp-email-err').textContent = 'No encontramos una cuenta con ese correo';
+      showErr('fp-email-err');
+      markInvalid('fp-email-inp');
+      return;
+    }
+
+    _fpEmail = email;
+    $('fp-otp-email').textContent = email;
+    // Clear any previous OTP inputs
+    document.querySelectorAll('#fp-otp-inputs .otp-inp').forEach(i => {
+      i.value = ''; i.classList.remove('filled','error');
+    });
+    $('fp-otp-err').style.visibility = 'hidden';
+    go('fp-otp');
+  }
+
+  function fpOtpNext(input, index) {
+    input.value = input.value.replace(/[^0-9]/g,'');
+    const inputs = document.querySelectorAll('#fp-otp-inputs .otp-inp');
+    if (input.value && index < 5) inputs[index + 1].focus();
+    inputs[index].classList.toggle('filled', !!input.value);
+  }
+
+  function fpOtpBack(event, index) {
+    const inputs = document.querySelectorAll('#fp-otp-inputs .otp-inp');
+    if (event.key === 'Backspace' && !inputs[index].value && index > 0) {
+      inputs[index - 1].focus();
+      inputs[index - 1].classList.remove('filled');
+    }
+  }
+
+  function fpVerifyOTP() {
+    const inputs  = document.querySelectorAll('#fp-otp-inputs .otp-inp');
+    const entered = Array.from(inputs).map(i => i.value).join('');
+    const errEl   = $('fp-otp-err');
+
+    if (entered.length < 6) {
+      errEl.style.visibility = 'visible';
+      errEl.textContent = 'Ingresa los 6 dígitos del código';
+      return;
+    }
+    if (entered !== OTP_CODE) {
+      errEl.style.visibility = 'visible';
+      errEl.textContent = 'Código incorrecto. Inténtalo de nuevo.';
+      inputs.forEach(i => { i.classList.add('error'); i.value = ''; });
+      inputs[0].focus();
+      return;
+    }
+
+    errEl.style.visibility = 'hidden';
+    clearInterval(_fpTimerInterval);
+    // Reset new-password fields
+    $('fp-new-pass').value = '';
+    $('fp-new-pass2').value = '';
+    const bar = $('fp-strength');
+    if (bar) { bar.style.width = '0'; bar.style.background = 'transparent'; }
+    clearErr('fp-pass-err', 'fp-pass2-err');
+    go('fp-newpass');
+  }
+
+  function fpResendOTP() {
+    toast('Código reenviado a ' + _fpEmail);
+    document.querySelectorAll('#fp-otp-inputs .otp-inp').forEach(i => {
+      i.value = ''; i.classList.remove('filled','error');
+    });
+    document.querySelector('#fp-otp-inputs .otp-inp').focus();
+    fpStartResendTimer();
+  }
+
+  function fpStartResendTimer() {
+    clearInterval(_fpTimerInterval);
+    let secs = 60;
+    const btn   = $('fp-resend-btn');
+    const timer = $('fp-resend-timer');
+    const count = $('fp-timer-count');
+    btn.style.display   = 'none';
+    timer.style.display = 'inline';
+    count.textContent   = secs;
+
+    _fpTimerInterval = setInterval(() => {
+      secs--;
+      count.textContent = secs;
+      if (secs <= 0) {
+        clearInterval(_fpTimerInterval);
+        btn.style.display   = 'inline';
+        timer.style.display = 'none';
+      }
+    }, 1000);
+  }
+
+  function fpSavePassword() {
+    const pass  = $('fp-new-pass').value;
+    const pass2 = $('fp-new-pass2').value;
+    let ok = true;
+
+    clearErr('fp-pass-err', 'fp-pass2-err');
+    markInvalid('fp-new-pass', false);
+    markInvalid('fp-new-pass2', false);
+
+    if (pass.length < 8) { showErr('fp-pass-err');  markInvalid('fp-new-pass');  ok = false; }
+    if (pass !== pass2)  { showErr('fp-pass2-err'); markInvalid('fp-new-pass2'); ok = false; }
+    if (!ok) return;
+
+    const users = JSON.parse(localStorage.getItem('gruasv_users') || '[]');
+    const idx = users.findIndex(u => u.email === _fpEmail);
+    if (idx === -1) {
+      toast('Ocurrió un error. Intenta de nuevo.', 'error');
+      go('fp-email');
+      return;
+    }
+
+    users[idx].password = pass;
+    localStorage.setItem('gruasv_users', JSON.stringify(users));
+
+    // Keep session in sync if this user is currently logged in
+    const session = JSON.parse(localStorage.getItem('gruasv_session') || 'null');
+    if (session && session.email === _fpEmail) {
+      session.password = pass;
+      localStorage.setItem('gruasv_session', JSON.stringify(session));
+    }
+
+    _fpEmail = null;
+    $('l-pass').value = '';
+    toast('¡Contraseña actualizada! Ya puedes iniciar sesión.', 'success');
+    setTimeout(() => go('login'), 1200);
   }
 
   /* ── REGISTER CLIENT ─────────────────────────── */
@@ -1375,6 +1645,7 @@ const App = (() => {
   return {
     go, back,
     doLogin, forgotPassword,
+    fpSubmitEmail, fpOtpNext, fpOtpBack, fpVerifyOTP, fpResendOTP, fpSavePassword,
     selectRole, continueFromType,
     togglePass, checkStrength, handleUpload,
     validateC1, validateC2, skipVehicle,
