@@ -17,6 +17,7 @@
   -->
   <script>
     window.MAPS_LOADED = false;
+    window.MAPS_FAILED = false;
     window._mapsQueue  = [];
     function initMaps() {
       window.MAPS_LOADED = true;
@@ -26,10 +27,16 @@
     function onMapsReady(fn) {
       MAPS_LOADED ? fn() : _mapsQueue.push(fn);
     }
+    /* Fired by Maps when API key is invalid / unauthorized */
+    function gm_authFailure() {
+      window.MAPS_FAILED = true;
+      window.MAPS_LOADED = false;
+      window._mapsQueue  = [];
+    }
   </script>
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=TU_CLAVE_AQUI&libraries=places,geometry&callback=initMaps&language=es&region=SV"
-    onerror="console.warn('Google Maps no disponible – modo simulado activo')">
+    onerror="window.MAPS_FAILED=true;window._mapsQueue=[];">
   </script>
 
   <style>
@@ -359,6 +366,20 @@ body{
 .pac-container{z-index:9999!important;border-radius:var(--rsm);box-shadow:var(--sh);border:1px solid var(--brd)}
 .pac-item{padding:8px 14px;font-size:14px;font-family:inherit}
 .pac-item:hover{background:var(--bg)}
+
+/* Text-mode overlay (replaces map area visually) */
+.text-mode-overlay{
+  position:absolute;inset:0;z-index:10;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  background:linear-gradient(135deg,#F5F5F7 0%,#EEF2F4 100%);
+  pointer-events:none;
+}
+.text-mode-overlay.show{display:flex}
+
+/* Distance adjustment row (text mode) */
+.dist-row{display:none;padding:12px 0 4px;border-top:1px solid var(--brd);margin-top:10px}
+.dist-row.show{display:block}
+.dist-inp{width:80px;text-align:center;padding:9px 8px}
   </style>
 </head>
 <body>
@@ -461,6 +482,15 @@ body{
         <div class="rstrip-item"><div class="rstrip-val" id="strip-time">—</div><div class="rstrip-lbl">Tiempo est.</div></div>
         <div class="rstrip-item"><div class="rstrip-val" id="strip-fare">—</div><div class="rstrip-lbl">Tarifa est.</div></div>
       </div>
+
+      <!-- Text-mode visual replacement -->
+      <div class="text-mode-overlay" id="text-mode-overlay">
+        <div style="font-size:52px">📍</div>
+        <div style="font-size:15px;font-weight:800;color:var(--navy)">Modo texto activo</div>
+        <div style="font-size:12px;color:var(--gray);text-align:center;max-width:210px;line-height:1.5">
+          Ingresa las direcciones y ajusta la distancia para calcular la tarifa
+        </div>
+      </div>
     </div>
 
     <!-- Locations panel -->
@@ -468,7 +498,7 @@ body{
       <div class="loc-handle"></div>
 
       <div class="manual-banner" id="manual-banner">
-        🗺️ <strong>Modo simulado:</strong> Google Maps no está configurado. Ingresa las direcciones manualmente para continuar.
+        📍 <strong>Modo texto:</strong> Google Maps no está disponible. Ingresa las direcciones y ajusta la distancia estimada para calcular la tarifa.
       </div>
 
       <!-- Origin -->
@@ -496,6 +526,25 @@ body{
           <input class="inp" type="text" id="dest-input" placeholder="¿A dónde llevar tu vehículo?"
             oninput="App.onDestInput()" onfocus="App.focusDest()">
           <button class="loc-clear" id="dest-clear" onclick="App.clearDest()">✕</button>
+        </div>
+      </div>
+
+      <!-- Distance field (text mode only) -->
+      <div class="dist-row" id="dist-row">
+        <div class="flex aic g8">
+          <span style="font-size:20px">📏</span>
+          <div class="f1">
+            <div class="f12 bold cgray mb4">Distancia estimada</div>
+            <div class="flex aic g8">
+              <input class="inp dist-inp" type="number" id="dist-input" value="15" min="1" max="500"
+                oninput="App.onDistInput(this.value)">
+              <span class="f14 bold cnavy">km</span>
+              <span class="f12 cgray f1">≈ <strong id="dist-fare-preview" class="cyellow">$—</strong> est.</span>
+            </div>
+          </div>
+        </div>
+        <div class="f11 cgray mt8" style="padding-left:28px">
+          Ajusta según tu ruta real · $1.50 por km + cargo base del servicio
         </div>
       </div>
 
@@ -782,6 +831,10 @@ const S = {
   payMethod:  'Efectivo',
   driver:     null,
   searchTimer: null,
+  // Text mode
+  textMode:     false,
+  manualDistKm: 15,
+  _mapsCheck:   null,
   // Maps objects
   map:           null,
   dirService:    null,
@@ -861,11 +914,71 @@ const App = {
 
   /* ── Screen 2: Map / Locations ───────────────── */
   _enterMap() {
-    onMapsReady(() => App._initMap());
-    if (!MAPS_LOADED) {
-      $('map-placeholder').classList.remove('hide');
-      $('manual-banner').classList.add('show');
-    }
+    // Already in text mode (e.g. user came back from fare screen)
+    if (S.textMode) return;
+
+    // Maps already known to have failed
+    if (window.MAPS_FAILED) { App._activateTextMode(); return; }
+
+    // Start a watchdog: if Maps hasn't loaded in 6 s → text mode
+    clearTimeout(S._mapsCheck);
+    S._mapsCheck = setTimeout(() => {
+      if (!MAPS_LOADED || window.MAPS_FAILED) App._activateTextMode();
+    }, 6000);
+
+    onMapsReady(() => {
+      clearTimeout(S._mapsCheck);
+      if (window.MAPS_FAILED) { App._activateTextMode(); return; }
+      App._initMap();
+    });
+
+    if (!MAPS_LOADED) $('map-placeholder').classList.remove('hide');
+  },
+
+  /* ── Text mode (Maps unavailable) ───────────── */
+  _activateTextMode() {
+    if (S.textMode) return;
+    S.textMode = true;
+    clearTimeout(S._mapsCheck);
+
+    // Show text-mode overlay over the map area
+    $('text-mode-overlay').classList.add('show');
+    $('map-placeholder').classList.add('hide');
+    const toolbar = document.querySelector('.map-toolbar');
+    if (toolbar) toolbar.style.display = 'none';
+
+    // Banner + distance field
+    $('manual-banner').classList.add('show');
+    $('dist-row').classList.add('show');
+
+    App._updateDistPreview();
+    App._updateConfirmBtn();
+  },
+
+  _recalcManualRoute() {
+    const km  = S.manualDistKm;
+    const min = Math.round(km * 1.5);
+    S.routeDist = km;
+    S.routeMin  = min;
+    S.fareBreak = calcFare(km, S.type);
+    $('strip-dist').textContent = km + ' km';
+    $('strip-time').textContent = min + ' min';
+    $('strip-fare').textContent = fmtUSD(S.fareBreak.total);
+    $('route-strip').classList.add('show');
+  },
+
+  _updateDistPreview() {
+    if (!S.type) return;
+    const b  = calcFare(S.manualDistKm, S.type);
+    const el = $('dist-fare-preview');
+    if (el) el.textContent = '$' + b.total.toFixed(2);
+  },
+
+  onDistInput(val) {
+    const km = Math.max(1, Math.min(500, parseFloat(val) || 15));
+    S.manualDistKm = km;
+    App._updateDistPreview();
+    if (S.origin && S.dest) App._recalcManualRoute();
   },
 
   _initMap() {
@@ -1012,54 +1125,71 @@ const App = {
   },
 
   _updateConfirmBtn() {
-    $('btn-confirm-loc').disabled = !(S.origin && S.dest);
+    const ok = S.textMode
+      ? !!($('origin-input').value.trim() && $('dest-input').value.trim())
+      : !!(S.origin && S.dest);
+    $('btn-confirm-loc').disabled = !ok;
   },
   _updateClearBtns() {
     $('origin-clear').classList.toggle('show', !!($('origin-input').value));
     $('dest-clear').classList.toggle('show',   !!($('dest-input').value));
   },
 
-  /* Simulated flow for no-Maps mode */
+  /* Legacy helper kept for non-text-mode fallback */
   _simulateRoute() {
     const oAddr = $('origin-input').value.trim();
     const dAddr = $('dest-input').value.trim();
     if (!oAddr || !dAddr) { toast('Ingresa origen y destino','error'); return false; }
-    // fake random distance 10–60 km
-    const km  = Math.round((10 + Math.random() * 50) * 10) / 10;
-    const min = Math.round(km * 1.5);
     S.origin    = { address: oAddr, lat: SV_CENTER.lat, lng: SV_CENTER.lng };
     S.dest      = { address: dAddr, lat: SV_CENTER.lat + 0.1, lng: SV_CENTER.lng + 0.1 };
-    S.routeDist = km;
-    S.routeMin  = min;
-    S.fareBreak = calcFare(km, S.type);
-    $('strip-dist').textContent = km + ' km';
-    $('strip-time').textContent = min + ' min';
-    $('strip-fare').textContent = fmtUSD(S.fareBreak.total);
-    $('route-strip').classList.add('show');
-    $('btn-confirm-loc').disabled = false;
+    App._recalcManualRoute();
     return true;
   },
 
   onOriginInput() {
-    $('origin-clear').classList.toggle('show', !!($('origin-input').value));
-    if (!MAPS_LOADED) App._updateConfirmBtn();
-  },
-  onDestInput() {
-    $('dest-clear').classList.toggle('show', !!($('dest-input').value));
-    if (!MAPS_LOADED) {
-      const o = $('origin-input').value.trim();
-      const d = $('dest-input').value.trim();
-      $('btn-confirm-loc').disabled = !(o && d);
+    const val = $('origin-input').value.trim();
+    $('origin-clear').classList.toggle('show', !!val);
+    if (S.textMode) {
+      S.origin = val ? { address: val, lat: SV_CENTER.lat, lng: SV_CENTER.lng } : null;
+      App._updateConfirmBtn();
+      if (S.origin && S.dest) App._recalcManualRoute();
     }
   },
-  focusOrigin() { if (!MAPS_LOADED) $('manual-banner').classList.add('show'); },
-  focusDest()   { if (!MAPS_LOADED) $('manual-banner').classList.add('show'); },
-  clearOrigin() { $('origin-input').value=''; S.origin=null; $('origin-clear').classList.remove('show'); App._updateConfirmBtn(); if(S.originMarker){S.originMarker.setMap(null);S.originMarker=null} },
-  clearDest()   { $('dest-input').value='';   S.dest=null;   $('dest-clear').classList.remove('show');   App._updateConfirmBtn(); if(S.destMarker){S.destMarker.setMap(null);S.destMarker=null} },
+  onDestInput() {
+    const val = $('dest-input').value.trim();
+    $('dest-clear').classList.toggle('show', !!val);
+    if (S.textMode) {
+      S.dest = val ? { address: val, lat: SV_CENTER.lat + 0.1, lng: SV_CENTER.lng + 0.1 } : null;
+      App._updateConfirmBtn();
+      if (S.origin && S.dest) App._recalcManualRoute();
+    }
+  },
+  focusOrigin() {},
+  focusDest()   {},
+  clearOrigin() {
+    $('origin-input').value = ''; S.origin = null;
+    $('origin-clear').classList.remove('show');
+    App._updateConfirmBtn();
+    if (S.originMarker) { S.originMarker.setMap(null); S.originMarker = null; }
+  },
+  clearDest() {
+    $('dest-input').value = ''; S.dest = null;
+    $('dest-clear').classList.remove('show');
+    App._updateConfirmBtn();
+    if (S.destMarker) { S.destMarker.setMap(null); S.destMarker = null; }
+  },
 
   useCurrentLocation() {
-    if (MAPS_LOADED) App._geolocate();
-    else { $('origin-input').value='Tu ubicación actual (GPS)'; S.origin={address:'Tu ubicación actual',lat:SV_CENTER.lat,lng:SV_CENTER.lng}; App._updateClearBtns(); App._updateConfirmBtn(); }
+    if (MAPS_LOADED && !window.MAPS_FAILED) {
+      App._geolocate();
+    } else {
+      const addr = 'Mi ubicación actual';
+      $('origin-input').value = addr;
+      S.origin = { address: addr, lat: SV_CENTER.lat, lng: SV_CENTER.lng };
+      App._updateClearBtns();
+      App._updateConfirmBtn();
+      if (S.dest) App._recalcManualRoute();
+    }
   },
 
   swapLocations() {
@@ -1082,8 +1212,15 @@ const App = {
   zoomOut() { if (S.map) S.map.setZoom(S.map.getZoom() - 1); },
 
   confirmLocations() {
-    if (!MAPS_LOADED) {
-      if (!App._simulateRoute()) return;
+    if (S.textMode) {
+      const oAddr = $('origin-input').value.trim();
+      const dAddr = $('dest-input').value.trim();
+      if (!oAddr || !dAddr) { toast('Ingresa origen y destino','error'); return; }
+      S.origin = { address: oAddr, lat: SV_CENTER.lat, lng: SV_CENTER.lng };
+      S.dest   = { address: dAddr, lat: SV_CENTER.lat + 0.1, lng: SV_CENTER.lng + 0.1 };
+      App._recalcManualRoute();
+      App.go('s-fare');
+      return;
     }
     if (!S.origin || !S.dest) { toast('Ingresa origen y destino','error'); return; }
     if (!S.fareBreak) S.fareBreak = calcFare(S.routeDist || 20, S.type);
